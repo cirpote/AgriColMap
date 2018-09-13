@@ -67,28 +67,6 @@ void PointCloudAligner::computeDensifiedPCLs( const std::string& fixed_cloud, co
     getPointCloud(moving_cloud)->computeDesifiedPCL(outp_img_size, Vector2(x_mean, y_mean), getPackagePath(), Vector3i(0,0,255));
 }
 
-void PointCloudAligner::writeAffineTransformCPD(const string &iter, const string &cloud){
-    Vector2 scale = getInitMovScale();
-
-    std::ostringstream float_conv_x, float_conv_y;
-    float_conv_x << scale(0);
-    std::string sx(float_conv_x.str());
-    std::replace( sx.begin(), sx.end(), '.', '_');
-
-    float_conv_y << scale(1);
-    std::string sy(float_conv_y.str());
-    std::replace( sy.begin(), sy.end(), '.', '_');
-
-    ofstream outputAffineTf;
-    outputAffineTf.open (getPackagePath() + "/params/output/" + getMovingCloudPath() + "/" + "CPD_Comparison/" + getMovingCloudPath() + "_AffineGroundTruth_" + sx + "_" + sy + "_" + iter + ".txt");
-    outputAffineTf << _R(0,0) << " " << _R(0,1) << " " << _R(0,2) << " " << _t(0) << " "
-                   << _R(1,0) << " " << _R(1,1) << " " << _R(1,2) << " " << _t(1) << " "
-                   << _R(2,0) << " " << _R(2,1) << " " << _R(2,2) << " " << _t(2) << " "
-                   << scale(0) << " " << scale(1);
-    outputAffineTf.close();
-    cerr << FBLU("Ground Truth Affine Transform Written in: ") << getMovingCloudPath() + "/" + "CPD_Comparison/" + getMovingCloudPath() + "/params/output/" + getMovingCloudPath() + "_AffineGroundTruth_" + sx + "_" + sy + "_" + iter + ".txt" << "\n";
-}
-
 void PointCloudAligner::writeAffineTransform(const string& iter, const string& cloud){
 
     Vector2 scale = getInitMovScale();
@@ -110,81 +88,6 @@ void PointCloudAligner::writeAffineTransform(const string& iter, const string& c
                  getMovingCloudPath() + "/" + getMovingCloudPath() + "_AffineGroundTruth_" +
                  iter + "_" + to_string( scaleNoise.norm() ) + "_" + to_string( translNoise.norm() ) +
                  "_" + to_string( yawNoise) + ".txt" << "\n";
-}
-
-void PointCloudAligner::MatchCPD(const std::string &cloud1_name, const std::string &cloud2_name, const cv::Size &size, const Eigen::Vector2f &scale, const string &iter_num){
-
-    pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr xyz_pcl( new pcl::PointCloud<pcl::PointXYZ> );
-    for( unsigned int i = 0; i < getPointCloud(cloud1_name)->getFilteredSize(); ++i)
-            xyz_pcl->points.push_back( pcl::PointXYZ(getPointCloud(cloud1_name)->getPointCloudFilteredAt(i).x,
-                                                     getPointCloud(cloud1_name)->getPointCloudFilteredAt(i).y,
-                                                     getPointCloud(cloud1_name)->getPointCloudFilteredAt(i).z) );
-    kdtree.setInputCloud(xyz_pcl);
-
-    Matrix3 R( Matrix3::Identity() );
-    Vector3 t( Vector3::Zero() );
-    //_R = _Rgt;
-    //_t = _tgt;
-    //_t += getPointCloud(cloud1_name)->randGpsInput;
-    getPointCloud(cloud1_name)->downsamplePointCloud(.13);
-    getPointCloud(cloud2_name)->downsamplePointCloud(.13);
-    vector<Vector3> fixed_pts, moving_pts;
-
-    float radius = 0.5; int MAX_ITER = 3;
-
-    int iter = 0;
-    while(iter < MAX_ITER){
-
-        int id = 0;
-        for( size_t i = 0; i < getPointCloud(cloud2_name)->getFilteredSize(); ++i) {
-
-                Vector3 query = getPointCloud(cloud2_name)->getPointCloudFilteredAt(i).getVector3fMap();
-                pcl::PointXYZ searchPoint(query(0), query(1), query(2));
-                std::vector<int> pointIdxRadiusSearch;
-                std::vector<float> pointRadiusSquaredDistance;
-                if ( kdtree.radiusSearch (searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0 ){
-                    Vector3 fix_pt = xyz_pcl->points[pointIdxRadiusSearch[0]].getVector3fMap();
-                    fixed_pts.push_back( fix_pt );
-                    moving_pts.push_back( query );
-                }
-
-            id++;
-        }
-
-        int refLen = fixed_pts.size();
-        cpd::Matrix fixedRefImg(refLen,3);
-        cpd::Matrix movingRefImg(refLen,3);
-
-        for(unsigned int iter = 0; iter < refLen; ++iter){
-            fixedRefImg(iter,0) = fixed_pts[iter](0); fixedRefImg(iter,1) = fixed_pts[iter](1); fixedRefImg(iter,2) = fixed_pts[iter](2);
-            movingRefImg(iter,0) = moving_pts[iter](0); movingRefImg(iter,1) = moving_pts[iter](1); movingRefImg(iter,2) = moving_pts[iter](2);
-        }
-
-        cerr << FGRN("Iteration N° ") << iter << "\n";
-        cpd::AffineResult refresult = cpd::affine(fixedRefImg, movingRefImg);
-
-        R = refresult.transform.cast<float> ();
-        t = refresult.translation.cast<float> ();
-        getPointCloud(cloud2_name)->affineTransformPointCloud(R, t);
-
-
-        _R = R*_R;
-        _t = R*_t + t;
-
-        fixed_pts.clear();
-        moving_pts.clear();
-        iter++;
-    }
-
-    if( getVerbosityLevel() ){
-        cerr << "\n";
-        std::cerr << FBLU("Final Affine Matrix: ") << "\n" << _R << "\n";
-        std::cerr << FBLU("Final Translation: ") << _t.transpose() << "\n";
-        std::cerr << FBLU("Initial Scale: ") << scale.transpose() << "\n";
-    }
-
-    writeAffineTransformCPD(iter_num, cloud2_name);
 }
 
 void PointCloudAligner::WriteDenseOpticalFlow(const int& w, const int& h, const string& cloud, const string& iter){
@@ -212,6 +115,7 @@ void PointCloudAligner::showDOFCorrespondeces(const int& len, const std::string&
                       cv::Point(filteredMatches[4*i + 2]+size.width, filteredMatches[4*i + 3]),
                       cv::Scalar(0, 255, 0));
 
+    cv::resize(drawImg, drawImg, cv::Size(2000, 1000) );
     cv::imshow("matches", drawImg);
     cv::waitKey(0);
     cv::destroyWindow("matches");

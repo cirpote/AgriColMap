@@ -20,7 +20,6 @@
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/filters/voxel_grid.h>
 
-
 // CPM Header
 #include "../../CPM/CPM.h"
 #include "../../CPM/OpticFlowIO.h"

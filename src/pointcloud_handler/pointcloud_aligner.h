@@ -14,7 +14,6 @@ class PointCloudAligner : public PointCloudHandler{
 
         // Set() functions
         void Match(const std::string& cloud1_name, const std::string& cloud2_name, const Eigen::Vector2f& scale, const string& iter_num, const cv::Size& size = cv::Size(1000,1000));
-        void MatchCPD(const std::string& cloud1_name, const std::string& cloud2_name, const cv::Size& size, const Eigen::Vector2f& scale, const string& iter_num);
         void computeAndApplyInitialRelativeGuess(const std::string& fixed_cloud_key,
                                                  const std::string& moving_cloud_key); 
 
@@ -23,8 +22,6 @@ class PointCloudAligner : public PointCloudHandler{
                                    const cv::Size& outp_img_size = cv::Size(1000,1000));
 
         void writeAffineTransform(const string& iter, const string &cloud);
-        void writeAffineTransformCPD(const string& iter, const string& cloud);
-
 
     private:
 
