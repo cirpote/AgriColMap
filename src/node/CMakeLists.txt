@@ -1,0 +1,30 @@
+add_executable(registration_node registration_node.cpp)
+target_link_libraries(registration_node pointcloud_aligner_lib yaml-cpp visualizer_lib)
+
+add_executable(visualization_node_maize visualization_node_maize.cpp)
+target_link_libraries(visualization_node_maize pointcloud_aligner_lib yaml-cpp visualizer_lib)
+
+add_executable(visualization_node_soybean visualization_node_soybean.cpp)
+target_link_libraries(visualization_node_soybean pointcloud_aligner_lib yaml-cpp visualizer_lib)
+
+add_executable(visualization_node_sugarbeet_20m visualization_node_sugarbeet_20m.cpp)
+target_link_libraries(visualization_node_sugarbeet_20m pointcloud_aligner_lib yaml-cpp visualizer_lib)
+
+add_executable(visualization_node_sugarbeet_10m visualization_node_sugarbeet_10m.cpp)
+target_link_libraries(visualization_node_sugarbeet_10m pointcloud_aligner_lib yaml-cpp visualizer_lib)
+
+add_executable(visualization_node_ww visualization_node_ww.cpp)
+target_link_libraries(visualization_node_ww pointcloud_aligner_lib yaml-cpp visualizer_lib)
+
+#add_executable(ground_truth_evaluation_node ground_truth_evaluation_node.cpp)
+#target_link_libraries(ground_truth_evaluation_node pointcloud_aligner_lib yaml-cpp visualizer_lib)
+
+#add_executable(evaluation_node evaluation_node.cpp)
+#target_link_libraries(evaluation_node pointcloud_aligner_lib yaml-cpp visualizer_lib)
+
+add_executable(comparison_node comparison_node.cpp)
+target_link_libraries(comparison_node pointcloud_aligner_lib yaml-cpp visualizer_lib)
+
+add_executable(visualization_node_soybean_init_guess visualization_node_soybean_init_guess.cpp)
+target_link_libraries(visualization_node_soybean_init_guess pointcloud_aligner_lib yaml-cpp visualizer_lib)
+

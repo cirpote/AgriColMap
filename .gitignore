@@ -1,0 +1,6 @@
+maps
+imgs
+*.kdev4
+*.vscode
+*.m~
+params/output/*.png
