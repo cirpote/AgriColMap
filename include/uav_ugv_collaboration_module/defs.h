@@ -29,7 +29,6 @@
 #include "../../cpd/include/cpd/affine.hpp"
 #include "../../cpd/include/cpd/rigid.hpp"
 
-#include "../../src_GoICP/jly_goicp.h"
 #include "opencv2/xfeatures2d.hpp"
 
 /* FOREGROUND */
