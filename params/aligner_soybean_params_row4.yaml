@@ -1,0 +1,24 @@
+## Input Parameters:
+input_clouds:
+
+  # Path, Name, and Type of the Clouds to Align
+  cloud_fixed_path:                   20180524-mavic-uav-soybean-eschikon 
+  cloud_fixed_name:                   point_cloud
+  cloud_moving_path:                  20180524-mavic-ugv-soybean-eschikon-row4
+  cloud_moving_name:                  point_cloud
+  relative_scale:	  	      [5.3,5.3] 
+
+## Other Parameters
+aligner_params:
+
+  # Dense Opt. Flow, and Final Ref. Params
+  max_iter_number:                    3
+  verbosity:                          true
+  store_dense_optical_flow:           false
+  show_dpf_correspondences:           false
+  dense_optical_flow_step:            3
+  downsampling_rate:                  0.13
+  search_radius:                      0.15
+  use_visual_features:                true
+  use_geometric_features:             false
+

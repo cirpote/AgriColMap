@@ -1,0 +1,17 @@
+## Aligner Parameters:
+input_clouds:
+
+  # Path, Name, and Type of the Clouds to Align
+  cloud_fixed_path:                   20180511-mavic-uav-sunflowers-ancona 
+  cloud_fixed_name:                   point_cloud
+  cloud_moving_path:                  20180511-mavic-ugv-sunflowers-ancona-row4
+  cloud_moving_name:                  point_cloud
+  relative_scale:	  	      [1,1] 
+
+
+aligner_params:
+
+  # Params for the ICP algorithm
+  max_iter_number:                    50
+  verbosity:                          true
+
