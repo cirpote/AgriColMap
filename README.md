@@ -1,36 +1,37 @@
-# AGRICOLMAP: Aerial-Ground Collaborative 3D Mapping for Precision Farming #
+# AgriColMap: Aerial-Ground Collaborative 3D Mapping for Precision Farming #
 
-This repository contains **AGRICOLMAP**,  an  open,  research-oriented 3D map registration system for multi-robot in farming scenarios [Flourish Sapienza Datasets Website](http://www.dis.uniroma1.it/~labrococo/fds/). 
+This repository contains **AgriColMap**,  an  open,  research-oriented 3D map registration system for multi-robot in farming scenarios [Flourish Sapienza Datasets Website](http://www.dis.uniroma1.it/~labrococo/fds/). 
 
 ## Requirements ##
 
-The code is tested on Ubuntu 18.04. **AGRICOLMAP** requires different tools and libraries. To install them on Ubuntu, use the terminal command:
+The code is tested on Ubuntu 18.04. **AgriColMap** requires requires different tools and libraries. To install them on Ubuntu, use the terminal command:
 
-- Install ROS Melodic by following this [guide](http://wiki.ros.org/kinetic/Installation);
+- Install ROS Melodic by following this [guide](https://wiki.ros.org/melodic/Installation/Ubuntu);
 
 ```bash
-sudo apt-get install ros-melodic-qt-build libyaml-cpp-dev python-catkin-tools
+sudo apt-get install libyaml-cpp-dev python-catkin-tools
 ```
 
 ## Building ##
 
-To build **AGRICOLMAP** on Ubuntu, type in a terminal the following command sequence.
+To build **AgriColMap** on Ubuntu, type in a terminal the following command sequence.
 
 ```bash
 ## Creating the workspace 
 mkdir -p ~/agricolmap_ws/src
+git clone https://bitbucket.org/cirpote/agricolmap
 cd ~/agricolmap_ws/
 catkin init && catkin build
 ```
 
 ### Tutorial ###
 
-In this brief tutorial, we show how to use the AGRICOLMAP to register 3D maps gathered by aerial and ground robots.
+In this brief tutorial, we briefly show how to use the AgriColMap to register 3D maps gathered by aerial and ground robots.
 The files you need to download are:
 
 - https://drive.google.com/uc?id=1nUYH5ofifw7xielyptZ8d2Z8G6AhiecA&export=download (Soybean Dataset)
 
-The "Soybean Dataset" contains UAV and UGV datasets registered in a soybean farm. Other datasets are freely available on [Sapienza Collaborative Mapping Datasets](http://www.dis.uniroma1.it/~labrococo/fsd/collaborativemapping.html).
+Uncompress the downloaded file into: ~/agricolmap_ws/src/agricolmap/maps/. The "Soybean Dataset" contains UAV and UGV datasets registered in a soybean farm. Other datasets are freely available on [Sapienza Collaborative Mapping Datasets](http://www.dis.uniroma1.it/~labrococo/fsd/collaborativemapping.html).
 
 ```bash
 rosrun uav_ugv_collaboration_module registration_node src/agricolmap/params/aligner_soybean_params_row3.yaml 10 250 50 2
