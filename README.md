@@ -37,13 +37,14 @@ rosrun uav_ugv_collaboration_module registration_node src/agricolmap/params/alig
 ```
 
 The 5 parameters are, respectively:
-- the .yaml param file
-- the initial scale error magnitude 
-- the translational error magnitude
-- the heading error magnitude
-- the ID number for storing the resulting transform
 
-In this case, we are registering the soybean third row, with an initial scale error magnitude of 10%, an traslational error magnitude of 2.5 metres, an heading error magnitude of 0.5 radians, and an ID of 2.
+  * the .yaml param file
+  * the initial scale error magnitude
+  * the translational error magnitude
+  * the heading error magnitude
+  * the ID number for storing the resulting transform
+
+In this case, we are registering the soybean third row, with an initial scale error magnitude of 10%, an traslational error magnitude of 2.5 metres, an heading error magnitude of 5 degrees, and an ID of 2.
 
   </export>
 </package>
