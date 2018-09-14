@@ -45,6 +45,3 @@ The 5 parameters are, respectively:
   * the ID number for storing the resulting transform
 
 In this case, we are registering the soybean third row, with an initial scale error magnitude of 10%, an traslational error magnitude of 2.5 metres, an heading error magnitude of 5 degrees, and an ID of 2.
-
-  </export>
-</package>
