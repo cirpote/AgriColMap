@@ -14,7 +14,7 @@ sudo apt-get install ros-melodic-qt-build libyaml-cpp-dev python-catkin-tools
 
 ## Building ##
 
-To build **MCAPS** on Ubuntu, type in a terminal the following command sequence.
+To build **AGRICOLMAP** on Ubuntu, type in a terminal the following command sequence.
 
 ```bash
 ## Creating the workspace 
