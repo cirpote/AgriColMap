@@ -334,7 +334,7 @@ void PointCloudAligner::Match( const std::string& cloud1_name, const std::string
     if( _storeDenseOptFlw )
         WriteDenseOpticalFlow(img1.width(), img1.height(), cloud2_name, iter_num);
 
-    cpm.VotingScheme(matches, filteredMatches, getPointCloud(cloud1_name)->getRGBImg(), getPointCloud(cloud2_name)->getRGBImg());
+    cpm.VotingSchemeHough(matches, filteredMatches, getPointCloud(cloud1_name)->getRGBImg(), getPointCloud(cloud2_name)->getRGBImg());
 
     cerr << "Total correspondences: " << matches.height() << " Outliers: " << matches.height() - filteredMatches.height() <<
             " Inliers: " << filteredMatches.height() << "\n";

@@ -96,27 +96,30 @@ void CPM::SetParams(int step, bool useVisualFeatures, bool useGeometricFeatures)
     }
 }
 
-void CPM::VotingSchemeHough(FImage& inpMatches, FImage& outMatches, const cv::Mat& rgb){
+void CPM::VotingSchemeHough(FImage& inpMatches, FImage& outMatches, const cv::Mat& rgb1, const cv::Mat& rgb2){
 
-    cv::Mat votingAccumulator( cv::Size(600,600), CV_32FC1, cv::Scalar(0) ); // 500, 500)
+    std::vector< Eigen::Vector4f > matches_filtered;
+    for(unsigned int it = 0; it < inpMatches.height(); ++it){
+        cv::Vec3b pt1 = rgb1.at<cv::Vec3b>(inpMatches[4*it+1], inpMatches[4*it]);
+        cv::Vec3b pt2 = rgb2.at<cv::Vec3b>(inpMatches[4*it+3], inpMatches[4*it+2]);
+        if( pt1[0] > 5 && pt1[1] > 5 && pt1[2] > 1 && pt2[0] > 5 && pt2[1] > 5 && pt2[2] > 5 ){
+            matches_filtered.push_back( Eigen::Vector4f( inpMatches[4*it], inpMatches[4*it+1], inpMatches[4*it+2], inpMatches[4*it+3]  ) );
+        }
+    }
 
-    int len = inpMatches.height();
+    cv::Mat votingAccumulator( cv::Size(2000,2000), CV_32FC1, cv::Scalar(0) );
+
+    int len = matches_filtered.size();
     std::vector<Eigen::Vector2f> flows;
     for(unsigned int i = 0; i < len; ++i){
-        /*v::Vec3b color = rgb.at<cv::Vec3b>(inpMatches[4*i + 2], inpMatches[4*i + 3]);
-            if( (color[0] + color[1] + color[2]) < 3 )
-                continue;*/
-        flows.push_back( Eigen::Vector2f( inpMatches[4 * i + 2]-inpMatches[4 * i + 0] + votingAccumulator.cols/2,
-                         inpMatches[4 * i + 3]-inpMatches[4 * i + 1] + votingAccumulator.rows/2) );
+        flows.push_back( Eigen::Vector2f( matches_filtered[i](2)-matches_filtered[i](0) + votingAccumulator.cols/2,
+                         matches_filtered[i](3)-matches_filtered[i](1) + votingAccumulator.rows/2) );
 
     }
 
-    //len = flows.size();
-
-    for(unsigned int i = 0; i < len; ++i){
-            if(flows[i].norm()<450) // 450
+    for(unsigned int i = 0; i < len; ++i)
                 addFlowToAccumulator(flows[i], votingAccumulator);
-    }
+
 
     Eigen::Vector2f max_pt(0,0);
     float max_value = -1;
@@ -142,19 +145,24 @@ void CPM::VotingSchemeHough(FImage& inpMatches, FImage& outMatches, const cv::Ma
     len = refFlows.size();
     outMatches = FImage(4, len, 1);
     for( unsigned int i = 1; i < len; ++i ) {
-            outMatches[i*4 + 0] = inpMatches[refFlows[i]*4 + 0];
-            outMatches[i*4 + 1] = inpMatches[refFlows[i]*4 + 1];
-            outMatches[i*4 + 2] = inpMatches[refFlows[i]*4 + 2];
-            outMatches[i*4 + 3] = inpMatches[refFlows[i]*4 + 3];
+            outMatches[i*4 + 0] = matches_filtered[refFlows[i]](0);
+            outMatches[i*4 + 1] = matches_filtered[refFlows[i]](1);
+            outMatches[i*4 + 2] = matches_filtered[refFlows[i]](2);
+            outMatches[i*4 + 3] = matches_filtered[refFlows[i]](3);
     }
 
+    //showHoughFilteredFlows(flows, votingAccumulator);
+}
 
+void CPM::showHoughFilteredFlows(const std::vector<Eigen::Vector2f> &f, const cv::Mat &img){
 
-    /*cv::circle(votingAccumulator, max_pt, 15, cv::Scalar(255) );
-    cv::imshow( "Accumulator", votingAccumulator );
-    cv::waitKey(0);*/
-
-
+    cv::Mat img_ = img.clone();
+    img_.convertTo(img_, CV_8UC1);
+    cv::normalize( img_, img_, 0, 255, cv::NORM_MINMAX);
+    cv::resize(img_, img_, cv::Size(1000, 1000));
+    cv::imshow( "Accumulator", img_ );
+    cv::waitKey(0);
+    cv::destroyAllWindows();
 }
 
 void CPM::addFlowToAccumulator(const Eigen::Vector2f &pt, cv::Mat &acc){
