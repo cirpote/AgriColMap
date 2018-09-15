@@ -1,6 +1,8 @@
 # AgriColMap: Aerial-Ground Collaborative 3D Mapping for Precision Farming #
 
-This repository contains **AgriColMap**,  an  open,  research-oriented 3D map registration system for multi-robot in farming scenarios [Flourish Sapienza Datasets Website](http://www.dis.uniroma1.it/~labrococo/fds/). 
+# AgriColMap: Aerial-Ground Collaborative 3D Mapping for Precision Farming #
+
+This repository contains **AgriColMap**,  an  open,  research-oriented 3D map registration system for multi-robot in farming scenarios. This software has been tested using the [UAV-UGV Collaborative Mapping Dataset](http://www.dis.uniroma1.it/~labrococo/fds/collaborativemapping.html) distributed within the [Flourish Sapienza Datasets](http://www.dis.uniroma1.it/~labrococo/fds/) collection. 
 
 ## Requirements ##
 
@@ -60,3 +62,4 @@ The following parts are licensed under GPL2:
 cpd
 
 AgriColMap is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the licenses for more details.
+
