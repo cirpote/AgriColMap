@@ -46,3 +46,17 @@ The 5 parameters are, respectively:
   * the ID number for storing the resulting transform
 
 In this case, we are registering the third row of the soybean dataset with an initial scale error magnitude of 10%, an traslational error magnitude of 2.5 metres, an heading error magnitude of 5 degrees, and an ID of 2.
+
+### License ###
+
+AgriColMap is licensed under the GPL2 License. However, some libraries are available under different license terms. See below.
+
+The following parts are licensed under GPL3:
+
+CPM
+
+The following parts are licensed under GPL2:
+
+cpd
+
+AgriColMap is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the licenses for more details.
