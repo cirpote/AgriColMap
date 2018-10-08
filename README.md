@@ -61,3 +61,17 @@ cpd
 
 AgriColMap is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the licenses for more details.
 
+### Citing ###
+
+Please cite the [following paper](https://arxiv.org/abs/1810.00457) when using maplab or ROVIOLI for your research:
+
+```bibtex
+@article{pknnp_arxiv2018,
+  title={{A}gri{C}ol{M}ap: {A}erial-Ground Collaborative {3D} Mapping
+         for Precision Farming},
+  author={Potena, Ciro and Khanna, Raghav and Nieto, Juan and
+          Siegwart, Roland and Nardi, Daniele and Pretto, Alberto},
+  journal={arXiv:1810.00457},
+  year={2018}
+}
+```
