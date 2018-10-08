@@ -63,7 +63,7 @@ AgriColMap is distributed in the hope that it will be useful, but WITHOUT ANY WA
 
 ### Citing ###
 
-Please cite the [following paper](https://arxiv.org/abs/1810.00457) when using maplab or ROVIOLI for your research:
+Please cite the [following paper](https://arxiv.org/abs/1810.00457) when using AgriColMap for your research:
 
 ```bibtex
 @article{pknnp_arxiv2018,
