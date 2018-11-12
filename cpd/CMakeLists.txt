@@ -103,13 +103,13 @@ install(EXPORT cpd-targets NAMESPACE Cpd:: DESTINATION lib/cmake/cpd)
 
 
 # Docs
-find_package(Doxygen QUIET)
-option(WITH_DOCS "Add documentation target" ${Doxygen_FOUND})
-if(WITH_DOCS)
-    find_package(Doxygen REQUIRED)
-    configure_file(docs/Doxyfile.in "${PROJECT_BINARY_DIR}/docs/Doxyfile")
-    add_custom_target(doc COMMAND ${DOXYGEN_EXECUTABLE} "${PROJECT_BINARY_DIR}/docs/Doxyfile")
-endif()
+#find_package(Doxygen QUIET)
+#option(WITH_DOCS "Add documentation target" ${Doxygen_FOUND})
+#if(WITH_DOCS)
+#    find_package(Doxygen REQUIRED)
+#    configure_file(docs/Doxyfile.in "${PROJECT_BINARY_DIR}/docs/Doxyfile")
+#    add_custom_target(doc COMMAND ${DOXYGEN_EXECUTABLE} "${PROJECT_BINARY_DIR}/docs/Doxyfile")
+#endif()
 
 
 # Components

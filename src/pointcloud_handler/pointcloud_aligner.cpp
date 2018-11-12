@@ -181,8 +181,8 @@ void PointCloudAligner::downsamplePointClouds(const std::string& cloud1_name, co
 
 void PointCloudAligner::finalRefinement(const string &cloud1_name, const string &cloud2_name, const Eigen::Vector2f& scale){
 
-    pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr xyz_pcl( new pcl::PointCloud<pcl::PointXYZ> );
+    PCLkdTreeFlann kdtree;
+    PCLPointCloudXYZ::Ptr xyz_pcl( new PCLPointCloudXYZ );
     for( unsigned int i = 0; i < getPointCloud(cloud1_name)->getFilteredSize(); ++i)
             xyz_pcl->points.push_back( pcl::PointXYZ(getPointCloud(cloud1_name)->getPointCloudFilteredAt(i).x,
                                                      getPointCloud(cloud1_name)->getPointCloudFilteredAt(i).y,
@@ -323,6 +323,11 @@ void PointCloudAligner::Match( const std::string& cloud1_name, const std::string
                                const Eigen::Vector2f& scale, const string& iter_num, const cv::Size& size ){
     
     cpm.SetParams(_dense_optical_flow_step, _useVisualFeatures, _useGeometricFeatures);
+
+    cv::Mat grayscaleImg_cloud1, grayscaleImg_cloud2;
+    cv::cvtColor(getPointCloud(cloud1_name)->getRGBImg(), grayscaleImg_cloud1, CV_RGB2GRAY);
+    cv::cvtColor(getPointCloud(cloud2_name)->getRGBImg(), grayscaleImg_cloud2, CV_RGB2GRAY);
+
     img1.imcopy( getPointCloud(cloud1_name)->getExGImg() );
     img2.imcopy( getPointCloud(cloud2_name)->getExGImg() );
     img1Cloud.imcopy( getPointCloud(cloud1_name)->getXYZImg() );

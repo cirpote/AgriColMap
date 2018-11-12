@@ -60,6 +60,9 @@ typedef Eigen::Vector2d Vector2d;
 typedef Eigen::Quaternionf Quat;
 typedef Eigen::Isometry3f Transform;
 typedef pcl::PointCloud<pcl::PointXYZRGB> PCLPointCloud;
+typedef pcl::PointCloud<pcl::PointXYZ> PCLPointCloudXYZ;
+typedef pcl::KdTreeFLANN<pcl::PointXYZ> PCLkdTreeFlann;
+typedef pcl::VoxelGrid<pcl::PointXYZRGB> PCLVoxelGrid;
 
 enum MatchingType {
     SURF,

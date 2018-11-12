@@ -45,8 +45,8 @@ bool PointCloud::getPointCloudFilteredAtWithRange(const int &i, const float &ran
 void PointCloud::downsamplePointCloud(const float &downsampl_range){
 
     // Generating temporary PCL PointCloud
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr temp_xyzrgb_pcl( new pcl::PointCloud<pcl::PointXYZRGB> );
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr filtered_xyzrgb_pcl( new pcl::PointCloud<pcl::PointXYZRGB> );
+    PCLPointCloud::Ptr temp_xyzrgb_pcl( new PCLPointCloud );
+    PCLPointCloud::Ptr filtered_xyzrgb_pcl( new PCLPointCloud );
     for( unsigned int i = 0; i < _PointCloudFiltered.size(); ++i){
         pcl::PointXYZRGB curr_pt;
         curr_pt.getArray3fMap() = _PointCloudFiltered[i].getArray3fMap();
@@ -57,7 +57,7 @@ void PointCloud::downsamplePointCloud(const float &downsampl_range){
     }
 
     // Filtering the PCL PointCloud
-    pcl::VoxelGrid<pcl::PointXYZRGB> filter;
+    PCLVoxelGrid filter;
     filter.setInputCloud (temp_xyzrgb_pcl);
     filter.setLeafSize (downsampl_range, downsampl_range, downsampl_range);
     filter.filter (*filtered_xyzrgb_pcl);
@@ -68,8 +68,8 @@ void PointCloud::downsamplePointCloud(const float &downsampl_range){
         _PointCloudFiltered.push_back( filtered_xyzrgb_pcl->points[iter] );
 
     // Generating temporary PCL PointCloud
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr temp_xyzrgb_pcl2( new pcl::PointCloud<pcl::PointXYZRGB> );
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr filtered_xyzrgb_pcl2( new pcl::PointCloud<pcl::PointXYZRGB> );
+    PCLPointCloud::Ptr temp_xyzrgb_pcl2( new PCLPointCloud );
+    PCLPointCloud::Ptr filtered_xyzrgb_pcl2( new PCLPointCloud );
     for( unsigned int i = 0; i < _PointCloud.size(); ++i){
         pcl::PointXYZRGB curr_pt;
         curr_pt.getArray3fMap() = _PointCloud[i].getArray3fMap();
@@ -80,7 +80,7 @@ void PointCloud::downsamplePointCloud(const float &downsampl_range){
     }
 
     // Filtering the PCL PointCloud
-    pcl::VoxelGrid<pcl::PointXYZRGB> filter2;
+    PCLVoxelGrid filter2;
     filter2.setInputCloud (temp_xyzrgb_pcl2);
     filter2.setLeafSize (downsampl_range, downsampl_range, downsampl_range);
     filter2.filter (*filtered_xyzrgb_pcl2);
@@ -195,7 +195,7 @@ pcl::PointXYZRGB PointCloud::computeAveragePoint(const std::vector<int>& Idx, co
 void PointCloud::computeImgs(const Vector2& offset, const Vector3i& color, const bool &take_higher){
 
     int size_mt = (20*_ElevImg.cols)/1000;
-    float radius = 0.01; float min_z = 1000; float max_z = -1000;
+    float radius = 0.015; float min_z = 1000; float max_z = -1000; // radius = 0.01
     for(unsigned int c = 0; c < _ElevImg.cols; ++c){
         for(unsigned int r = 0; r < _ElevImg.rows; ++r){
 
@@ -274,6 +274,7 @@ void PointCloud::computeImgs(const Vector2& offset, const Vector3i& color, const
 
     cv::normalize( _XYZImg_viz, _XYZImg_viz, 0, 255, cv::NORM_MINMAX, CV_32FC1 );
     _XYZImg_viz.convertTo(_XYZImg_viz, CV_8UC1);
+    cv::cvtColor(_RGBImg, _GrayImg, CV_RGB2GRAY);
 
     //cv::imshow("_ElevImg", _XYZImg_viz );
     //cv::imwrite("/home/ciro/Scrivania/height_map.png", _XYZImg_viz);
@@ -286,7 +287,7 @@ void PointCloud::computeImgs(const Vector2& offset, const Vector3i& color, const
 
 void PointCloud::computePlanarKDTree(){
 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr xyz_pcl( new pcl::PointCloud<pcl::PointXYZ> );
+    PCLPointCloudXYZ::Ptr xyz_pcl( new PCLPointCloudXYZ );
     for( unsigned int i = 0; i < _PointCloud.size(); ++i)
             xyz_pcl->points.push_back( pcl::PointXYZ( _PointCloud[i].x, _PointCloud[i].y,  0.f) );
 

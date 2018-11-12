@@ -1,5 +1,5 @@
 #pragma once
-#include "../../../uav_ugv_collaboration_module/include/uav_ugv_collaboration_module/utils.h"
+#include "../../include/uav_ugv_collaboration_module/utils.h"
  
 class PointCloud{
 
@@ -29,6 +29,7 @@ class PointCloud{
         cv::Mat inline getRGBImg(){ return _RGBImg;}
         cv::Mat inline getXYZImg(){ return _XYZImg;}
         cv::Mat inline getExGImg(){ return _ExGImg;}
+        cv::Mat inline getGrayImg(){ return _GrayImg;}
         Vector2 inline getScaleNoise(){ return _scaleNoise;}
         float inline getYawNoise(){ return _YawNoise;}
         Vector2d inline getTranslNoise(){ return _TranslNoise;}
@@ -54,7 +55,7 @@ class PointCloud{
         void computePlanarKDTree();
 
         // KDTree Variables
-	    pcl::KdTreeFLANN<pcl::PointXYZ> planar_kdtree;
+        PCLkdTreeFlann planar_kdtree;
 
         // Cloud Data
         const std::string _cloudName; 
@@ -70,5 +71,5 @@ class PointCloud{
         float _YawNoise;
 
         // Cloud Organized Data
-        cv::Mat _ExGImg, _ElevImg, _XYZImg, _RGBImg, _ExGColorImg;
+        cv::Mat _ExGImg, _ElevImg, _XYZImg, _RGBImg, _ExGColorImg, _GrayImg;
 };
