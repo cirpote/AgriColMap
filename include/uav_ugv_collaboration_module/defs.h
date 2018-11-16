@@ -63,6 +63,7 @@ typedef pcl::PointCloud<pcl::PointXYZRGB> PCLPointCloud;
 typedef pcl::PointCloud<pcl::PointXYZ> PCLPointCloudXYZ;
 typedef pcl::KdTreeFLANN<pcl::PointXYZ> PCLkdTreeFlann;
 typedef pcl::VoxelGrid<pcl::PointXYZRGB> PCLVoxelGrid;
+typedef std::vector< pcl::PointXYZRGB, Eigen::aligned_allocator<pcl::PointXYZRGB> > VectorXYZRGB;
 
 enum MatchingType {
     SURF,

@@ -324,9 +324,8 @@ void PointCloudAligner::Match( const std::string& cloud1_name, const std::string
     
     cpm.SetParams(_dense_optical_flow_step, _useVisualFeatures, _useGeometricFeatures);
 
-    cv::Mat grayscaleImg_cloud1, grayscaleImg_cloud2;
-    cv::cvtColor(getPointCloud(cloud1_name)->getRGBImg(), grayscaleImg_cloud1, CV_RGB2GRAY);
-    cv::cvtColor(getPointCloud(cloud2_name)->getRGBImg(), grayscaleImg_cloud2, CV_RGB2GRAY);
+    //cv::imshow("ExG Image", getPointCloud(cloud2_name)->getRGBImg() );
+    //cv::waitKey(0);
 
     img1.imcopy( getPointCloud(cloud1_name)->getExGImg() );
     img2.imcopy( getPointCloud(cloud2_name)->getExGImg() );

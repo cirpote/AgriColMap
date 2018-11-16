@@ -11,9 +11,7 @@ void PointCloud::loadFromPcl( const PCLPointCloud::Ptr& pointCloud ){
     }
 }
 
-void PointCloud::copyFrom(const std::vector<pcl::PointXYZRGB, Eigen::aligned_allocator<pcl::PointXYZRGB> >& pcl_data, 
-                          const Vector3d& t,
-                          const Vector3& q){
+void PointCloud::copyFrom(const VectorXYZRGB& pcl_data, const Vector3d& t, const Vector3& q){
 
     _PointCloud.reserve( pcl_data.size() );
     _PointCloud = pcl_data;

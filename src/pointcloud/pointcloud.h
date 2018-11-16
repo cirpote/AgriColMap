@@ -12,9 +12,7 @@ class PointCloud{
 
         void computeFilteredPcl(const Vector3i& color);
         void loadFromPcl( const PCLPointCloud::Ptr& pointCloud );
-        void copyFrom(const std::vector<pcl::PointXYZRGB, Eigen::aligned_allocator<pcl::PointXYZRGB> >& pcl_data, 
-                      const Vector3d& t,
-                      const Vector3& q);
+        void copyFrom(const VectorXYZRGB& pcl_data, const Vector3d& t, const Vector3& q);
                       
         // Get() functions 
         int inline getSize(){ return _PointCloud.size(); }
@@ -24,8 +22,8 @@ class PointCloud{
         pcl::PointXYZRGB inline getPointCloudAt(const int& i){return _PointCloud[i];}
         bool getPointCloudFilteredAtWithRange(const int& i, const float& range, pcl::PointXYZRGB& pt );
         pcl::PointXYZRGB inline getPointCloudFilteredAt(const int& i){return _PointCloudFiltered[i];}
-        std::vector< pcl::PointXYZRGB, Eigen::aligned_allocator<pcl::PointXYZRGB> > inline getPointCloud(){ return _PointCloud;}
-        std::vector< pcl::PointXYZRGB, Eigen::aligned_allocator<pcl::PointXYZRGB> > inline getPointCloudFiltered(){ return _PointCloudFiltered;}
+        VectorXYZRGB inline getPointCloud(){ return _PointCloud;}
+        VectorXYZRGB inline getPointCloudFiltered(){ return _PointCloudFiltered;}
         cv::Mat inline getRGBImg(){ return _RGBImg;}
         cv::Mat inline getXYZImg(){ return _XYZImg;}
         cv::Mat inline getExGImg(){ return _ExGImg;}
