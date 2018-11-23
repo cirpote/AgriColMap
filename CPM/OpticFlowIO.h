@@ -127,21 +127,21 @@ int OpticFlowIO::ReadKittiFlowFile(T* U, T* V, int* w, int* h, const char* filen
 		return -1;
 	}
 
-	IplImage* img = cvLoadImage(filename, CV_LOAD_IMAGE_COLOR | CV_LOAD_IMAGE_ANYDEPTH);
+	cv::Mat img = cv::imread(filename, cv::IMREAD_COLOR | cv::IMREAD_ANYDEPTH);
 	if (img == NULL){
 		printf("ReadKittiFlowFile: could not open %s\n", filename);
 		return -1;
 	}
 
-	int width = img->width;
-	int height = img->height;
+	int width = img.rows();
+	int height = img.cols();
 	for(int i=0; i<height; i++){
 		for(int j=0; j<width; j++){
-			uint16_t* rowImgData = (uint16_t*)(img->imageData + i*img->widthStep);
-			uint16_t validFlag = rowImgData[j*img->nChannels];
+			uint16_t* rowImgData = (uint16_t*)(img.data + i*img.step);
+			uint16_t validFlag = rowImgData[j*img.channels()];
 			if(validFlag > 0){
-				U[i*width+j] = (rowImgData[j*img->nChannels + 2] - 32768.0f)/64.0f;
-				V[i*width+j] = (rowImgData[j*img->nChannels + 1] - 32768.0f)/64.0f;
+				U[i*width+j] = (rowImgData[j*img.channels() + 2] - 32768.0f)/64.0f;
+				V[i*width+j] = (rowImgData[j*img.channels() + 1] - 32768.0f)/64.0f;
 			}else{
 				U[i*width+j] = UNKNOWN_FLOW;
 				V[i*width+j] = UNKNOWN_FLOW;
@@ -151,7 +151,7 @@ int OpticFlowIO::ReadKittiFlowFile(T* U, T* V, int* w, int* h, const char* filen
 
 	*w = width;
 	*h = height;
-	cvReleaseImage(&img);
+	//cvReleaseImage(&img);
 	return 0;
 }
 
@@ -176,28 +176,30 @@ int OpticFlowIO::WriteKittiFlowFile(T* U, T* V, int w, int h, const char* filena
 
 	int width = w, height = h;
 
-	IplImage* img = cvCreateImage(cvSize(w,h), IPL_DEPTH_16U, 3);
+	cv::Mat img(cv::Size(w,h), CV_DEPTH_MAX, 3);
 	for(int i=0; i<height; i++){
 		for(int j=0; j<width; j++){
 			double u,v;
 			u = U[i*width+j];
 			v = V[i*width+j];
-			uint16_t* rowImgData = (uint16_t*)(img->imageData + i*img->widthStep);
+			uint16_t* rowImgData = (uint16_t*)(img.data + i*img.step);
 			if(!unknown_flow(u,v)){
-				rowImgData[j*img->nChannels + 2] = __max(__min(U[i*width+j]*64.0f+32768.0f, 65535), 0);
-				rowImgData[j*img->nChannels + 1] = __max(__min(V[i*width+j]*64.0f+32768.0f, 65535), 0);
-				rowImgData[j*img->nChannels] = 1;
+				rowImgData[j*img.channels() + 2] = __max(__min(U[i*width+j]*64.0f+32768.0f, 65535), 0);
+				rowImgData[j*img.channels() + 1] = __max(__min(V[i*width+j]*64.0f+32768.0f, 65535), 0);
+				rowImgData[j*img.channels()] = 1;
 			}else{
-				rowImgData[j*img->nChannels + 2] = 0;
-				rowImgData[j*img->nChannels + 1] = 0;
-				rowImgData[j*img->nChannels] = 0;
+				rowImgData[j*img.channels() + 2] = 0;
+				rowImgData[j*img.channels() + 1] = 0;
+				rowImgData[j*img.channels()] = 0;
 			}
 		}
 	}
 
-	const int params[2]={CV_IMWRITE_PNG_COMPRESSION, 1};
-	cvSaveImage(filename, img, params); // slight lossy PNG
-	cvReleaseImage(&img);
+	vector<int> params;
+	params.push_back(cv::IMWRITE_PNG_COMPRESSION);
+	params.push_back(1);
+	cv::imwrite(filename, img, params); // slight lossy PNG
+	//cvReleaseImage(&img);
 	return 0;
 }
 
@@ -412,7 +414,7 @@ float OpticFlowIO::ShowFlow(const char* winname, T* U, T* V, int w, int h,
 	color[2] = 255 - pSrc[2];
 	char info[256];
 	sprintf(info, "max: %.1f", maxFlow);
-	cv::putText(img, info, cvPoint(x, y), CV_FONT_HERSHEY_SIMPLEX, 0.5, cvScalar(color[0], color[1], color[2]));
+	cv::putText(img, info, cv::Point(x, y), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(color[0], color[1], color[2]));
 #endif
 
 	cv::imshow(winname, img);
@@ -437,7 +439,7 @@ void OpticFlowIO::SaveFlowAsImage(const char* imgName, T* U, T* V, int w, int h,
 	color[2] = 255 - pSrc[2];
 	char info[256];
 	sprintf(info, "max: %.1f", maxFlow);
-	cv::putText(img, info, cvPoint(x, y), CV_FONT_HERSHEY_SIMPLEX, 0.5, cvScalar(color[0], color[1], color[2]));
+	cv::putText(img, info, cv::Point(x, y), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(color[0], color[1], color[2]));
 #endif
 
 	cv::imwrite(imgName, img);

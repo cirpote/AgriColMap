@@ -40,10 +40,9 @@ public:
 	CPM();
 	~CPM();
 
-    void showHoughFilteredFlows( const std::vector<Eigen::Vector2f>& f, const cv::Mat& img );
     void Match2Flow(FImage& inMat, FImage& ou, FImage& ov, int w, int h);
     int Matching(FImage& img1, FImage &img1Cloud, FImage& img2, FImage &img2Cloud, FImage& outMatches);
-    void VotingSchemeHough(FImage& inpMatches, FImage& outMatches, const cv::Mat &rgb1, const cv::Mat &rgb2);
+    void VotingSchemeHough(FImage& inpMatches, FImage& outMatches, const cv::Mat &rgb, const cv::Mat &rgb2);
     void VotingScheme(FImage& inpMatches, FImage& outMatches, const cv::Mat &rgb, const cv::Mat &rgb2);
     void addFlowToAccumulator(const Eigen::Vector2f& pt, cv::Mat& acc);
 	void SetStereoFlag(int needStereo);

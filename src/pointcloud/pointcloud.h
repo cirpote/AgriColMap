@@ -12,7 +12,9 @@ class PointCloud{
 
         void computeFilteredPcl(const Vector3i& color);
         void loadFromPcl( const PCLPointCloud::Ptr& pointCloud );
-        void copyFrom(const VectorXYZRGB& pcl_data, const Vector3d& t, const Vector3& q);
+        void copyFrom(const std::vector<pcl::PointXYZRGB, Eigen::aligned_allocator<pcl::PointXYZRGB> >& pcl_data, 
+                      const Vector3d& t,
+                      const Vector3& q);
                       
         // Get() functions 
         int inline getSize(){ return _PointCloud.size(); }
@@ -22,12 +24,11 @@ class PointCloud{
         pcl::PointXYZRGB inline getPointCloudAt(const int& i){return _PointCloud[i];}
         bool getPointCloudFilteredAtWithRange(const int& i, const float& range, pcl::PointXYZRGB& pt );
         pcl::PointXYZRGB inline getPointCloudFilteredAt(const int& i){return _PointCloudFiltered[i];}
-        VectorXYZRGB inline getPointCloud(){ return _PointCloud;}
-        VectorXYZRGB inline getPointCloudFiltered(){ return _PointCloudFiltered;}
+        std::vector< pcl::PointXYZRGB, Eigen::aligned_allocator<pcl::PointXYZRGB> > inline getPointCloud(){ return _PointCloud;}
+        std::vector< pcl::PointXYZRGB, Eigen::aligned_allocator<pcl::PointXYZRGB> > inline getPointCloudFiltered(){ return _PointCloudFiltered;}
         cv::Mat inline getRGBImg(){ return _RGBImg;}
         cv::Mat inline getXYZImg(){ return _XYZImg;}
         cv::Mat inline getExGImg(){ return _ExGImg;}
-        cv::Mat inline getGrayImg(){ return _GrayImg;}
         Vector2 inline getScaleNoise(){ return _scaleNoise;}
         float inline getYawNoise(){ return _YawNoise;}
         Vector2d inline getTranslNoise(){ return _TranslNoise;}
@@ -53,7 +54,7 @@ class PointCloud{
         void computePlanarKDTree();
 
         // KDTree Variables
-        PCLkdTreeFlann planar_kdtree;
+	    pcl::KdTreeFLANN<pcl::PointXYZ> planar_kdtree;
 
         // Cloud Data
         const std::string _cloudName; 
@@ -69,5 +70,5 @@ class PointCloud{
         float _YawNoise;
 
         // Cloud Organized Data
-        cv::Mat _ExGImg, _ElevImg, _XYZImg, _RGBImg, _ExGColorImg, _GrayImg;
+        cv::Mat _ExGImg, _ElevImg, _XYZImg, _RGBImg, _ExGColorImg;
 };

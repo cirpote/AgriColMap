@@ -20,6 +20,7 @@
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/filters/voxel_grid.h>
 
+
 // CPM Header
 #include "../../CPM/CPM.h"
 #include "../../CPM/OpticFlowIO.h"
@@ -28,7 +29,10 @@
 #include "../../cpd/include/cpd/affine.hpp"
 #include "../../cpd/include/cpd/rigid.hpp"
 
-#include "opencv2/xfeatures2d.hpp"
+// GoICP Header
+#include "../../src_GoICP/jly_goicp.h"
+
+#include <opencv2/xfeatures2d.hpp>
 
 /* FOREGROUND */
 #define RST  "\x1B[0m"
@@ -60,10 +64,6 @@ typedef Eigen::Vector2d Vector2d;
 typedef Eigen::Quaternionf Quat;
 typedef Eigen::Isometry3f Transform;
 typedef pcl::PointCloud<pcl::PointXYZRGB> PCLPointCloud;
-typedef pcl::PointCloud<pcl::PointXYZ> PCLPointCloudXYZ;
-typedef pcl::KdTreeFLANN<pcl::PointXYZ> PCLkdTreeFlann;
-typedef pcl::VoxelGrid<pcl::PointXYZRGB> PCLVoxelGrid;
-typedef std::vector< pcl::PointXYZRGB, Eigen::aligned_allocator<pcl::PointXYZRGB> > VectorXYZRGB;
 
 enum MatchingType {
     SURF,

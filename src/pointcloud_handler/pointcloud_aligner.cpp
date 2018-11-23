@@ -67,6 +67,28 @@ void PointCloudAligner::computeDensifiedPCLs( const std::string& fixed_cloud, co
     getPointCloud(moving_cloud)->computeDesifiedPCL(outp_img_size, Vector2(x_mean, y_mean), getPackagePath(), Vector3i(0,0,255));
 }
 
+void PointCloudAligner::writeAffineTransformCPD(const string &iter, const string &cloud){
+    Vector2 scale = getInitMovScale();
+
+    std::ostringstream float_conv_x, float_conv_y;
+    float_conv_x << scale(0);
+    std::string sx(float_conv_x.str());
+    std::replace( sx.begin(), sx.end(), '.', '_');
+
+    float_conv_y << scale(1);
+    std::string sy(float_conv_y.str());
+    std::replace( sy.begin(), sy.end(), '.', '_');
+
+    ofstream outputAffineTf;
+    outputAffineTf.open (getPackagePath() + "/params/output/" + getMovingCloudPath() + "/" + "CPD_Comparison/" + getMovingCloudPath() + "_AffineGroundTruth_" + sx + "_" + sy + "_" + iter + ".txt");
+    outputAffineTf << _R(0,0) << " " << _R(0,1) << " " << _R(0,2) << " " << _t(0) << " "
+                   << _R(1,0) << " " << _R(1,1) << " " << _R(1,2) << " " << _t(1) << " "
+                   << _R(2,0) << " " << _R(2,1) << " " << _R(2,2) << " " << _t(2) << " "
+                   << scale(0) << " " << scale(1);
+    outputAffineTf.close();
+    cerr << FBLU("Ground Truth Affine Transform Written in: ") << getMovingCloudPath() + "/" + "CPD_Comparison/" + getMovingCloudPath() + "/params/output/" + getMovingCloudPath() + "_AffineGroundTruth_" + sx + "_" + sy + "_" + iter + ".txt" << "\n";
+}
+
 void PointCloudAligner::writeAffineTransform(const string& iter, const string& cloud){
 
     Vector2 scale = getInitMovScale();
@@ -88,6 +110,177 @@ void PointCloudAligner::writeAffineTransform(const string& iter, const string& c
                  getMovingCloudPath() + "/" + getMovingCloudPath() + "_AffineGroundTruth_" +
                  iter + "_" + to_string( scaleNoise.norm() ) + "_" + to_string( translNoise.norm() ) +
                  "_" + to_string( yawNoise) + ".txt" << "\n";
+}
+
+void PointCloudAligner::MatchGoICP(const string &cloud1_name, const string &cloud2_name){
+
+    Vector2 _scaleNoise   = getPointCloud(cloud2_name)->getScaleNoise();
+    Vector2d _TranslNoise = getPointCloud(cloud2_name)->getTranslNoise();
+    float _YawNoise       = getPointCloud(cloud2_name)->getYawNoise();
+
+    Vector3 transl(_TranslNoise(0),_TranslNoise(1),0.f);
+    Matrix3 rot(Eigen::AngleAxisf(_YawNoise, Eigen::Vector3f::UnitZ()));
+    getPointCloud(cloud2_name)->affineTransformPointCloud(rot, transl);
+    getPointCloud(cloud2_name)->scalePointCloud(_scaleNoise);
+
+    getPointCloud(cloud1_name)->downsamplePointCloud(.10);
+    getPointCloud(cloud2_name)->downsamplePointCloud(.10);
+
+    clock_t  clockBegin, clockEnd;
+    POINT3D * pModel, * pData;
+    GoICP goicp;
+
+    int Nm = getPointCloud(cloud1_name)->getFilteredSize();
+    pModel = (POINT3D *)malloc(sizeof(POINT3D) * Nm);
+
+    for(unsigned int i = 0; i < Nm; i++)
+    {
+        pcl::PointXYZRGB pt = getPointCloud(cloud1_name)->getPointCloudFilteredAt(i);
+        pModel[i].x = pt.x; pModel[i].y = pt.y; pModel[i].z = pt.z;
+    }
+
+    int Nd = getPointCloud(cloud2_name)->getFilteredSize();
+    pData = (POINT3D *)malloc(sizeof(POINT3D) * Nd);
+    for(unsigned int i = 0; i < Nd; i++)
+    {
+        pcl::PointXYZRGB pt = getPointCloud(cloud2_name)->getPointCloudFilteredAt(i);
+        pData[i].x = pt.x; pData[i].y = pt.y; pData[i].z = pt.z;
+    }
+
+    goicp.MSEThresh = 0.005;
+    goicp.initNodeRot.a = -3.1416;
+    goicp.initNodeRot.b = -3.1416;
+    goicp.initNodeRot.c = -3.1416;
+    goicp.initNodeRot.w = 6.2832;
+    goicp.initNodeTrans.x = -0.5;
+    goicp.initNodeTrans.y = -0.5;
+    goicp.initNodeTrans.z = -0.5;
+    goicp.initNodeTrans.w = 1;
+    goicp.trimFraction = 0.0;
+    // If < 0.1% trimming specified, do no trimming
+    if(goicp.trimFraction < 0.001)
+    {
+        goicp.doTrim = false;
+    }
+    goicp.dt.SIZE = 300;
+    goicp.dt.expandFactor = 2.0;
+
+    goicp.pModel = pModel;
+    goicp.Nm = Nm;
+    goicp.pData = pData;
+    goicp.Nd = Nd;
+
+    // Build Distance Transform
+    cout << "Building Distance Transform..." << flush;
+    clockBegin = clock();
+    goicp.BuildDT();
+    clockEnd = clock();
+    cout << (double)(clockEnd - clockBegin)/CLOCKS_PER_SEC << "s (CPU)" << endl;
+
+    // Run GO-ICP
+    std::cout << "Model ID: " << cloud1_name << " (" << goicp.Nm << "), Data ID: " << cloud2_name << " (" << goicp.Nd << ")" << "\n";
+    std::cout << "Registering..." << "\n";
+    clockBegin = clock();
+    goicp.Register();
+    clockEnd = clock();
+    double time = (double)(clockEnd - clockBegin)/CLOCKS_PER_SEC;
+    std::cout << "Optimal Rotation Matrix:" << "\n";
+    std::cout << goicp.optR << "\n";
+    std::cout << "Optimal Translation Vector:" << "\n";
+    std::cout << goicp.optT << "\n";
+    std::cout << "Finished in " << time << "\n";
+
+    Matrix3 R( Matrix3::Identity() );
+    Vector3 t( Vector3::Zero() );
+
+    for (int32_t i=0; i<goicp.optR.m; i++) {
+      for (int32_t j=0; j<goicp.optR.n; j++) {
+         R(i,j) = goicp.optR.val[i][j];
+      }
+    }
+
+
+    t(0) = goicp.optT.val[0][0];  t(1) = goicp.optT.val[1][0]; t(2) = goicp.optT.val[2][0];
+    std::cout << R << "\n" << "\n";
+    std::cout << t.transpose() << "\n";
+
+    getPointCloud(cloud2_name)->affineTransformPointCloud(R, t);
+
+}
+
+void PointCloudAligner::MatchCPD(const std::string &cloud1_name, const std::string &cloud2_name, const cv::Size &size, const Eigen::Vector2f &scale, const string &iter_num){
+
+    pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr xyz_pcl( new pcl::PointCloud<pcl::PointXYZ> );
+    for( unsigned int i = 0; i < getPointCloud(cloud1_name)->getFilteredSize(); ++i)
+            xyz_pcl->points.push_back( pcl::PointXYZ(getPointCloud(cloud1_name)->getPointCloudFilteredAt(i).x,
+                                                     getPointCloud(cloud1_name)->getPointCloudFilteredAt(i).y,
+                                                     getPointCloud(cloud1_name)->getPointCloudFilteredAt(i).z) );
+    kdtree.setInputCloud(xyz_pcl);
+
+    Matrix3 R( Matrix3::Identity() );
+    Vector3 t( Vector3::Zero() );
+    //_R = _Rgt;
+    //_t = _tgt;
+    //_t += getPointCloud(cloud1_name)->randGpsInput;
+    getPointCloud(cloud1_name)->downsamplePointCloud(.13);
+    getPointCloud(cloud2_name)->downsamplePointCloud(.13);
+    vector<Vector3> fixed_pts, moving_pts;
+
+    float radius = 0.5; int MAX_ITER = 3;
+
+    int iter = 0;
+    while(iter < MAX_ITER){
+
+        int id = 0;
+        for( size_t i = 0; i < getPointCloud(cloud2_name)->getFilteredSize(); ++i) {
+
+                Vector3 query = getPointCloud(cloud2_name)->getPointCloudFilteredAt(i).getVector3fMap();
+                pcl::PointXYZ searchPoint(query(0), query(1), query(2));
+                std::vector<int> pointIdxRadiusSearch;
+                std::vector<float> pointRadiusSquaredDistance;
+                if ( kdtree.radiusSearch (searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0 ){
+                    Vector3 fix_pt = xyz_pcl->points[pointIdxRadiusSearch[0]].getVector3fMap();
+                    fixed_pts.push_back( fix_pt );
+                    moving_pts.push_back( query );
+                }
+
+            id++;
+        }
+
+        int refLen = fixed_pts.size();
+        cpd::Matrix fixedRefImg(refLen,3);
+        cpd::Matrix movingRefImg(refLen,3);
+
+        for(unsigned int iter = 0; iter < refLen; ++iter){
+            fixedRefImg(iter,0) = fixed_pts[iter](0); fixedRefImg(iter,1) = fixed_pts[iter](1); fixedRefImg(iter,2) = fixed_pts[iter](2);
+            movingRefImg(iter,0) = moving_pts[iter](0); movingRefImg(iter,1) = moving_pts[iter](1); movingRefImg(iter,2) = moving_pts[iter](2);
+        }
+
+        cerr << FGRN("Iteration N° ") << iter << "\n";
+        cpd::AffineResult refresult = cpd::affine(fixedRefImg, movingRefImg);
+
+        R = refresult.transform.cast<float> ();
+        t = refresult.translation.cast<float> ();
+        getPointCloud(cloud2_name)->affineTransformPointCloud(R, t);
+
+
+        _R = R*_R;
+        _t = R*_t + t;
+
+        fixed_pts.clear();
+        moving_pts.clear();
+        iter++;
+    }
+
+    if( getVerbosityLevel() ){
+        cerr << "\n";
+        std::cerr << FBLU("Final Affine Matrix: ") << "\n" << _R << "\n";
+        std::cerr << FBLU("Final Translation: ") << _t.transpose() << "\n";
+        std::cerr << FBLU("Initial Scale: ") << scale.transpose() << "\n";
+    }
+
+    writeAffineTransformCPD(iter_num, cloud2_name);
 }
 
 void PointCloudAligner::WriteDenseOpticalFlow(const int& w, const int& h, const string& cloud, const string& iter){
@@ -115,8 +308,10 @@ void PointCloudAligner::showDOFCorrespondeces(const int& len, const std::string&
                       cv::Point(filteredMatches[4*i + 2]+size.width, filteredMatches[4*i + 3]),
                       cv::Scalar(0, 255, 0));
 
-    cv::resize(drawImg, drawImg, cv::Size(2000, 1000) );
-    cv::imshow("matches", drawImg);
+    cv::Mat drawImgRes;
+    cv::resize(drawImg, drawImgRes, cv::Size( 2000, 1000 ) );
+
+    cv::imshow("matches", drawImgRes);
     cv::waitKey(0);
     cv::destroyWindow("matches");
 
@@ -181,8 +376,8 @@ void PointCloudAligner::downsamplePointClouds(const std::string& cloud1_name, co
 
 void PointCloudAligner::finalRefinement(const string &cloud1_name, const string &cloud2_name, const Eigen::Vector2f& scale){
 
-    PCLkdTreeFlann kdtree;
-    PCLPointCloudXYZ::Ptr xyz_pcl( new PCLPointCloudXYZ );
+    pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr xyz_pcl( new pcl::PointCloud<pcl::PointXYZ> );
     for( unsigned int i = 0; i < getPointCloud(cloud1_name)->getFilteredSize(); ++i)
             xyz_pcl->points.push_back( pcl::PointXYZ(getPointCloud(cloud1_name)->getPointCloudFilteredAt(i).x,
                                                      getPointCloud(cloud1_name)->getPointCloudFilteredAt(i).y,
@@ -323,10 +518,6 @@ void PointCloudAligner::Match( const std::string& cloud1_name, const std::string
                                const Eigen::Vector2f& scale, const string& iter_num, const cv::Size& size ){
     
     cpm.SetParams(_dense_optical_flow_step, _useVisualFeatures, _useGeometricFeatures);
-
-    //cv::imshow("ExG Image", getPointCloud(cloud2_name)->getRGBImg() );
-    //cv::waitKey(0);
-
     img1.imcopy( getPointCloud(cloud1_name)->getExGImg() );
     img2.imcopy( getPointCloud(cloud2_name)->getExGImg() );
     img1Cloud.imcopy( getPointCloud(cloud1_name)->getXYZImg() );
@@ -338,7 +529,7 @@ void PointCloudAligner::Match( const std::string& cloud1_name, const std::string
     if( _storeDenseOptFlw )
         WriteDenseOpticalFlow(img1.width(), img1.height(), cloud2_name, iter_num);
 
-    cpm.VotingSchemeHough(matches, filteredMatches, getPointCloud(cloud1_name)->getRGBImg(), getPointCloud(cloud2_name)->getRGBImg());
+    cpm.VotingScheme(matches, filteredMatches, getPointCloud(cloud1_name)->getRGBImg(), getPointCloud(cloud2_name)->getRGBImg());
 
     cerr << "Total correspondences: " << matches.height() << " Outliers: " << matches.height() - filteredMatches.height() <<
             " Inliers: " << filteredMatches.height() << "\n";

@@ -137,7 +137,7 @@ void ImageIO::showGrayImageAsColor(const char* winname, const unsigned char* pIm
         std::cout << "[" << minV << ", " << maxV << "]\n";
 	else
         std::cout << "[" << (int)minV << ", " << (int)maxV << "]\n";
-	cv::putText(im, info, cvPoint(10, 20), CV_FONT_HERSHEY_SIMPLEX, 0.5, cvScalar(255, 255, 255));
+	cv::putText(im, info, cv::Point(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255));
 
 	//
 	cv::imshow(winname, im);
@@ -226,7 +226,7 @@ cv::Mat ImageIO::CvmatFromPixels(const T* pImagePlane, int width, int height, in
 			sprintf(info, "[%.3f, %.3f]", Min, Max);
 		else
 			sprintf(info, "[%d, %d]", (int)Min, (int)Max);
-		cv::putText(im, info, cvPoint(10, 20), CV_FONT_HERSHEY_SIMPLEX, 0.5, cvScalar(255, 255, 255));
+		cv::putText(im, info, cv::Point(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255));
 	}
 
 	return im;
