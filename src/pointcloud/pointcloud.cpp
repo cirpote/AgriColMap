@@ -42,6 +42,51 @@ bool PointCloud::getPointCloudFilteredAtWithRange(const int &i, const float &ran
     }
 }
 
+void PointCloud::planeNormalization(){
+
+    pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
+    pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
+    pcl::SACSegmentation<pcl::PointXYZ> seg;
+    seg.setOptimizeCoefficients (true);
+    seg.setModelType (pcl::SACMODEL_PLANE);
+    seg.setMethodType (pcl::SAC_RANSAC);
+    seg.setDistanceThreshold (0.01);
+
+    // Computing Moving PointCloud Plane Equation
+    pcl::PointCloud<pcl::PointXYZ>::Ptr temp_xyz_pcl( new pcl::PointCloud<pcl::PointXYZ> );
+    for( unsigned int i = 0; i < _PointCloud.size(); i+=10){
+        pcl::PointXYZ curr_pt;
+        curr_pt.getArray3fMap() = _PointCloud[i].getArray3fMap();
+        temp_xyz_pcl->points.push_back( curr_pt );
+    }
+
+    seg.setInputCloud (temp_xyz_pcl);
+    seg.segment (*inliers, *coefficients);
+
+    Vector3 ez;
+    if( coefficients->values[2] > 0)
+        ez = Vector3(coefficients->values[0], coefficients->values[1], coefficients->values[2]);
+    else if( coefficients->values[2] < 0 )
+        ez = Vector3(-coefficients->values[0], -coefficients->values[1], -coefficients->values[2]);
+
+    Vector3 ez_B = ez / ez.norm();
+
+    float yaw_des = _init_guess_q(2)*(3.14/180);
+    Vector3 ey_C( -sin(yaw_des), cos(yaw_des), 0 );
+
+    Vector3 ex_B = ey_C.cross( ez_B ) / ( ey_C.cross( ez_B ) ).norm();
+    Vector3 ey_B = ez_B.cross( ex_B ) / ( ez_B.cross( ex_B ) ).norm();
+
+    Matrix3 A; A.col(0) = ex_B; A.col(1) = ey_B; A.col(2) = ez_B;
+
+    Transform R = Transform::Identity();
+    R.rotate(A.transpose());
+    R.translation() << Vector3(0,0,coefficients->values[3]);
+
+    R.translation() << Vector3(0,0,coefficients->values[3]);
+    transformPointCloud(R);
+}
+
 void PointCloud::downsamplePointCloud(const float &downsampl_range){
 
     // Generating temporary PCL PointCloud

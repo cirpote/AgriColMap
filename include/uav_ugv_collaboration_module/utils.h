@@ -16,6 +16,21 @@ void inline ExitWithErrorMsg(const std::string& msg){
     std::exit(1);
 }
 
+inline float yawFromQuaternion(const Eigen::Quaternionf& q) {
+   return atan2(2.0 * (q.w() * q.z() + q.x() * q.y()),
+                1.0 - 2.0 * (q.y() * q.y() + q.z() * q.z()));
+}
+
+inline float rollFromQuaternion(const Eigen::Quaternionf& q) {
+   return atan2(2.0*(q.x()*q.w() + q.y()*q.z()),
+               1 - 2*(q.x()*q.x() + q.y()*q.y()));
+}
+
+inline float pitchFromQuaternion(const Eigen::Quaternionf& q) {
+   return asin(2.0*(q.w()*q.y() - q.x()*q.z()));
+}
+
+
 std::vector<double> vectorFromString(const std::string& str);
 
 void AffineTransformFromString(const std::string& str,

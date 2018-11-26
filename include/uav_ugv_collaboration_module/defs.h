@@ -19,7 +19,7 @@
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/filters/voxel_grid.h>
-
+#include <pcl/segmentation/sac_segmentation.h>
 
 // CPM Header
 #include "../../CPM/CPM.h"

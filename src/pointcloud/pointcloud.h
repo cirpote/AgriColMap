@@ -46,6 +46,7 @@ class PointCloud{
                                 const std::string& package_path, const Vector3i& color, const bool& take_higher = false);
         void downsamplePointCloud(const float& downsampl_range);
         void addNoise(const float& scaleMag, const float& TranslMag, const float& YawMag);
+        void planeNormalization();
 
     private:
 

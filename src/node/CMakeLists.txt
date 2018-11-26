@@ -1,6 +1,9 @@
 add_executable(registration_node registration_node.cpp)
 target_link_libraries(registration_node pointcloud_aligner_lib yaml-cpp visualizer_lib)
 
+add_executable(registration_node_test registration_node_test.cpp)
+target_link_libraries(registration_node_test pointcloud_aligner_lib yaml-cpp visualizer_lib)
+
 add_executable(visualization_node_maize visualization_node_maize.cpp)
 target_link_libraries(visualization_node_maize pointcloud_aligner_lib yaml-cpp visualizer_lib)
 
