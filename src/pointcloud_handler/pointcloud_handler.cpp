@@ -9,8 +9,8 @@ void PointCloudHandler::loadCloud(const std::string &cloud_name, const std::stri
         ExitWithErrorMsg("File Does Not Exist: " + input_pcl_str);
 
     _pclMap.emplace( cloud_key, boost::make_shared<PointCloud>(cloud_key) );
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr _pcl_data( new pcl::PointCloud<pcl::PointXYZRGB> );
-    pcl::io::loadPLYFile<pcl::PointXYZRGB> ( input_pcl_str, *_pcl_data);
+    PCLPointCloudXYZRGB::Ptr _pcl_data( new PCLPointCloudXYZRGB() );
+    pcl::io::loadPLYFile<PCLptXYZRGB> ( input_pcl_str, *_pcl_data);
     _pclMap[cloud_key]->loadFromPcl(_pcl_data);
     cerr << FGRN("Correctly Imported: ") << input_pcl_str << " " << _pclMap[cloud_key]->getSize() << " Points" << "\n";
 
@@ -105,7 +105,7 @@ void PointCloudHandler::loadFromDisk(const std::string& fixed_cloud_key, const s
 void PointCloudHandler::cropFixedPointCloud(const std::string& crop_cloud, const std::string& mov_cloud, const std::string& fix_cloud){
 
     _pclMap.emplace( crop_cloud, boost::make_shared<PointCloud>( crop_cloud ) );
-    std::vector<pcl::PointXYZRGB, Eigen::aligned_allocator<pcl::PointXYZRGB> > filt_pcl;
+    PCLptXYZRGB_Vector filt_pcl;
 
     Vector2 init_T( _InitTfMap[mov_cloud]->translation().head(2) );
 

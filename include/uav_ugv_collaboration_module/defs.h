@@ -55,6 +55,7 @@
 #define BOLD(x)	"\x1B[1m" x RST
 #define UNDL(x)	"\x1B[4m" x RST
 
+// Eigen typedefs
 typedef Eigen::Matrix3f Matrix3;
 typedef Eigen::Vector3f Vector3;
 typedef Eigen::Vector3d Vector3d;
@@ -63,7 +64,6 @@ typedef Eigen::Vector2f Vector2;
 typedef Eigen::Vector2d Vector2d;
 typedef Eigen::Quaternionf Quat;
 typedef Eigen::Isometry3f Transform;
-typedef pcl::PointCloud<pcl::PointXYZRGB> PCLPointCloud;
 
 enum MatchingType {
     SURF,
@@ -103,3 +103,19 @@ struct _PointData{
 
     _PointData() { _ExG = 0; _elev = 0;}
 }; 
+
+typedef std::unordered_map<std::string, const boost::shared_ptr<GroundTruth> > GroundTruthUnorderedMap;
+typedef std::unordered_map<std::string, const boost::shared_ptr<Transform> > TransformUnorderedMap;
+
+using namespace pcl::io;
+
+// PCL typedefs
+typedef pcl::PointXYZRGB PCLptXYZRGB;
+typedef pcl::PointXYZ PCLptXYZ;
+typedef pcl::PointCloud<PCLptXYZRGB> PCLPointCloudXYZRGB;
+typedef pcl::PointCloud<PCLptXYZ> PCLPointCloudXYZ;
+typedef std::vector< PCLptXYZRGB, Eigen::aligned_allocator<PCLptXYZRGB> > PCLptXYZRGB_Vector;
+typedef std::vector< _PointData, Eigen::aligned_allocator<_PointData> > PointData_Vector;
+typedef pcl::KdTreeFLANN<PCLptXYZ> PCLKDtreeXYZ;
+typedef pcl::SACSegmentation<PCLptXYZ> PCLsegmentationXYZ;
+typedef pcl::VoxelGrid<pcl::PointXYZRGB> PCLvoxelGridXYZRGB;

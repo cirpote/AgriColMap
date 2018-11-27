@@ -11,8 +11,8 @@ class PointCloud{
         ~PointCloud(){}
 
         void computeFilteredPcl(const Vector3i& color);
-        void loadFromPcl( const PCLPointCloud::Ptr& pointCloud );
-        void copyFrom(const std::vector<pcl::PointXYZRGB, Eigen::aligned_allocator<pcl::PointXYZRGB> >& pcl_data, 
+        void loadFromPcl( const PCLPointCloudXYZRGB::Ptr& pointCloud );
+        void copyFrom(const PCLptXYZRGB_Vector& pcl_data,
                       const Vector3d& t,
                       const Vector3& q);
                       
@@ -21,11 +21,11 @@ class PointCloud{
         int inline getFilteredSize(){ return _PointCloudFiltered.size(); }
         Vector3d inline getInitGuessT(){return _init_guess_t;}
         Vector3 inline getInitGuessQ(){return _init_guess_q;}
-        pcl::PointXYZRGB inline getPointCloudAt(const int& i){return _PointCloud[i];}
-        bool getPointCloudFilteredAtWithRange(const int& i, const float& range, pcl::PointXYZRGB& pt );
-        pcl::PointXYZRGB inline getPointCloudFilteredAt(const int& i){return _PointCloudFiltered[i];}
-        std::vector< pcl::PointXYZRGB, Eigen::aligned_allocator<pcl::PointXYZRGB> > inline getPointCloud(){ return _PointCloud;}
-        std::vector< pcl::PointXYZRGB, Eigen::aligned_allocator<pcl::PointXYZRGB> > inline getPointCloudFiltered(){ return _PointCloudFiltered;}
+        PCLptXYZRGB inline getPointCloudAt(const int& i){return _PointCloud[i];}
+        bool getPointCloudFilteredAtWithRange(const int& i, const float& range, PCLptXYZRGB& pt );
+        PCLptXYZRGB inline getPointCloudFilteredAt(const int& i){return _PointCloudFiltered[i];}
+        PCLptXYZRGB_Vector inline getPointCloud(){ return _PointCloud;}
+        PCLptXYZRGB_Vector inline getPointCloudFiltered(){ return _PointCloudFiltered;}
         cv::Mat inline getRGBImg(){ return _RGBImg;}
         cv::Mat inline getXYZImg(){ return _XYZImg;}
         cv::Mat inline getExGImg(){ return _ExGImg;}
@@ -50,18 +50,18 @@ class PointCloud{
 
     private:
 
-        pcl::PointXYZRGB computeAveragePoint(const std::vector<int>& Idx, const std::vector<float>& Radius, const float &range);
+        PCLptXYZRGB computeAveragePoint(const std::vector<int>& Idx, const std::vector<float>& Radius, const float &range);
         void computeImgs(const Vector2& offset, const Vector3i& color, const bool& take_higher);
         void computePlanarKDTree();
 
         // KDTree Variables
-	    pcl::KdTreeFLANN<pcl::PointXYZ> planar_kdtree;
+        PCLKDtreeXYZ planar_kdtree;
 
         // Cloud Data
         const std::string _cloudName; 
-        std::vector< _PointData, Eigen::aligned_allocator<_PointData> > _PointCloudData;
-        std::vector< pcl::PointXYZRGB, Eigen::aligned_allocator<pcl::PointXYZRGB> > _PointCloud;
-        std::vector< pcl::PointXYZRGB, Eigen::aligned_allocator<pcl::PointXYZRGB> > _PointCloudFiltered;
+        PointData_Vector _PointCloudData;
+        PCLptXYZRGB_Vector _PointCloud;
+        PCLptXYZRGB_Vector _PointCloudFiltered;
 
         // Initial Guesses
         Vector3d _init_guess_t;

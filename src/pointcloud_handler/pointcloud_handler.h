@@ -7,6 +7,8 @@ class PointCloudHandler{
 
     public:
 
+        typedef std::unordered_map<std::string, const boost::shared_ptr<PointCloud> > PointCloudUnorderedMap;
+
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
         PointCloudHandler() : _package_path( ros::package::getPath("uav_ugv_collaboration_module") ){
             std::cerr << std::fixed << std::setprecision(6); }
@@ -56,9 +58,9 @@ class PointCloudHandler{
 
 
         // Ground Truth & Point Clouds
-        std::unordered_map<std::string, const boost::shared_ptr<PointCloud> > _pclMap;
-        std::unordered_map<std::string, const boost::shared_ptr<GroundTruth> > _GTMap;
-        std::unordered_map<std::string, const boost::shared_ptr<Transform> > _InitTfMap;
+        PointCloudUnorderedMap _pclMap;
+        GroundTruthUnorderedMap _GTMap;
+        TransformUnorderedMap _InitTfMap;
 
         const std::string _package_path;
 

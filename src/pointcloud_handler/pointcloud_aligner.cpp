@@ -135,7 +135,7 @@ void PointCloudAligner::MatchGoICP(const string &cloud1_name, const string &clou
 
     for(unsigned int i = 0; i < Nm; i++)
     {
-        pcl::PointXYZRGB pt = getPointCloud(cloud1_name)->getPointCloudFilteredAt(i);
+        PCLptXYZRGB pt = getPointCloud(cloud1_name)->getPointCloudFilteredAt(i);
         pModel[i].x = pt.x; pModel[i].y = pt.y; pModel[i].z = pt.z;
     }
 
@@ -143,7 +143,7 @@ void PointCloudAligner::MatchGoICP(const string &cloud1_name, const string &clou
     pData = (POINT3D *)malloc(sizeof(POINT3D) * Nd);
     for(unsigned int i = 0; i < Nd; i++)
     {
-        pcl::PointXYZRGB pt = getPointCloud(cloud2_name)->getPointCloudFilteredAt(i);
+        PCLptXYZRGB pt = getPointCloud(cloud2_name)->getPointCloudFilteredAt(i);
         pData[i].x = pt.x; pData[i].y = pt.y; pData[i].z = pt.z;
     }
 
@@ -210,12 +210,12 @@ void PointCloudAligner::MatchGoICP(const string &cloud1_name, const string &clou
 
 void PointCloudAligner::MatchCPD(const std::string &cloud1_name, const std::string &cloud2_name, const cv::Size &size, const Eigen::Vector2f &scale, const string &iter_num){
 
-    pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr xyz_pcl( new pcl::PointCloud<pcl::PointXYZ> );
+    PCLKDtreeXYZ kdtree;
+    PCLPointCloudXYZ::Ptr xyz_pcl( new PCLPointCloudXYZ() );
     for( unsigned int i = 0; i < getPointCloud(cloud1_name)->getFilteredSize(); ++i)
-            xyz_pcl->points.push_back( pcl::PointXYZ(getPointCloud(cloud1_name)->getPointCloudFilteredAt(i).x,
-                                                     getPointCloud(cloud1_name)->getPointCloudFilteredAt(i).y,
-                                                     getPointCloud(cloud1_name)->getPointCloudFilteredAt(i).z) );
+            xyz_pcl->points.push_back( PCLptXYZ(getPointCloud(cloud1_name)->getPointCloudFilteredAt(i).x,
+                                                getPointCloud(cloud1_name)->getPointCloudFilteredAt(i).y,
+                                                getPointCloud(cloud1_name)->getPointCloudFilteredAt(i).z) );
     kdtree.setInputCloud(xyz_pcl);
 
     Matrix3 R( Matrix3::Identity() );
@@ -236,7 +236,7 @@ void PointCloudAligner::MatchCPD(const std::string &cloud1_name, const std::stri
         for( size_t i = 0; i < getPointCloud(cloud2_name)->getFilteredSize(); ++i) {
 
                 Vector3 query = getPointCloud(cloud2_name)->getPointCloudFilteredAt(i).getVector3fMap();
-                pcl::PointXYZ searchPoint(query(0), query(1), query(2));
+                PCLptXYZ searchPoint(query(0), query(1), query(2));
                 std::vector<int> pointIdxRadiusSearch;
                 std::vector<float> pointRadiusSquaredDistance;
                 if ( kdtree.radiusSearch (searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0 ){
@@ -376,12 +376,12 @@ void PointCloudAligner::downsamplePointClouds(const std::string& cloud1_name, co
 
 void PointCloudAligner::finalRefinement(const string &cloud1_name, const string &cloud2_name, const Eigen::Vector2f& scale){
 
-    pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr xyz_pcl( new pcl::PointCloud<pcl::PointXYZ> );
+    PCLKDtreeXYZ kdtree;
+    PCLPointCloudXYZ::Ptr xyz_pcl( new PCLPointCloudXYZ() );
     for( unsigned int i = 0; i < getPointCloud(cloud1_name)->getFilteredSize(); ++i)
-            xyz_pcl->points.push_back( pcl::PointXYZ(getPointCloud(cloud1_name)->getPointCloudFilteredAt(i).x,
-                                                     getPointCloud(cloud1_name)->getPointCloudFilteredAt(i).y,
-                                                     getPointCloud(cloud1_name)->getPointCloudFilteredAt(i).z) );
+            xyz_pcl->points.push_back( PCLptXYZ(getPointCloud(cloud1_name)->getPointCloudFilteredAt(i).x,
+                                                getPointCloud(cloud1_name)->getPointCloudFilteredAt(i).y,
+                                                getPointCloud(cloud1_name)->getPointCloudFilteredAt(i).z) );
     kdtree.setInputCloud(xyz_pcl);
     vector<Vector3> fixed_pts, moving_pts;
     int iter = 0;
@@ -391,7 +391,7 @@ void PointCloudAligner::finalRefinement(const string &cloud1_name, const string 
         for( size_t i = 0; i < getPointCloud(cloud2_name)->getFilteredSize(); ++i) {
 
                 Vector3 query = getPointCloud(cloud2_name)->getPointCloudFilteredAt(i).getVector3fMap();
-                pcl::PointXYZ searchPoint(query(0), query(1), query(2));
+                PCLptXYZ searchPoint(query(0), query(1), query(2));
                 std::vector<int> pointIdxRadiusSearch;
                 std::vector<float> pointRadiusSquaredDistance;
                 if ( kdtree.radiusSearch (searchPoint, _search_radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0 ){
@@ -557,5 +557,6 @@ void PointCloudAligner::Match( const std::string& cloud1_name, const std::string
         std::cerr << FBLU("Final Translation: ") << _t.transpose() << "\n";
         std::cerr << FBLU("Initial Scale: ") << scale.transpose() << "\n";
     }
+
     writeAffineTransform(iter_num, cloud2_name);
 }

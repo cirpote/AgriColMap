@@ -51,9 +51,9 @@ Vector3 getScaleFromAffineMatrix(const Matrix3& aff){
     return output;
 }
 
-unsigned char computeExGforPoint(const pcl::PointXYZRGB& pt,
-                                        std::vector< pcl::PointXYZRGB, Eigen::aligned_allocator<pcl::PointXYZRGB> >& PointCloudFiltered,
-                                        const Vector3i& color){
+unsigned char computeExGforPoint(const PCLptXYZRGB& pt,
+                                 PCLptXYZRGB_Vector& PointCloudFiltered,
+                                 const Vector3i& color){
 
         float red, blue, green, sum, ExG, sumNorm = 0.f;
         sum = (int)pt.r  + (int)pt.g  + (int)pt.b;
@@ -64,7 +64,7 @@ unsigned char computeExGforPoint(const pcl::PointXYZRGB& pt,
         ExG = (2 * green - blue - red) * 255.0;
         ExG = std::max(0.f, ExG);
 
-        pcl::PointXYZRGB curr_point;
+        PCLptXYZRGB curr_point;
         curr_point.getVector3fMap() = pt.getVector3fMap();
         if(ExG > 30 ){
             curr_point.r = color(0);
@@ -76,7 +76,8 @@ unsigned char computeExGforPoint(const pcl::PointXYZRGB& pt,
         return ExG;
 }
 
-pcl::PointXYZRGB getHighestPoint(std::vector<int>& pt_list, std::vector< pcl::PointXYZRGB, Eigen::aligned_allocator<pcl::PointXYZRGB> >& pt_cloud){
+PCLptXYZRGB getHighestPoint(std::vector<int>& pt_list,
+                            PCLptXYZRGB_Vector& pt_cloud){
 
     float max_z = -1000;
     int max_z_index = 0.f;

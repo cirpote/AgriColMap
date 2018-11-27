@@ -40,11 +40,9 @@ void AffineTransformFromString(const std::string& str,
 
 Vector3 getScaleFromAffineMatrix(const Matrix3& aff);
 
-unsigned char computeExGforPoint(const pcl::PointXYZRGB& pt,
-                                 std::vector< pcl::PointXYZRGB,
-                                 Eigen::aligned_allocator<pcl::PointXYZRGB> >& PointCloudFiltered,
+unsigned char computeExGforPoint(const PCLptXYZRGB& pt,
+                                 PCLptXYZRGB_Vector& PointCloudFiltered,
                                  const Vector3i& color);
 
-pcl::PointXYZRGB getHighestPoint(std::vector<int>& pt_list,
-                                 std::vector< pcl::PointXYZRGB,
-                                 Eigen::aligned_allocator<pcl::PointXYZRGB> >& pt_cloud);
+PCLptXYZRGB getHighestPoint(std::vector<int>& pt_list,
+                            PCLptXYZRGB_Vector& pt_cloud);

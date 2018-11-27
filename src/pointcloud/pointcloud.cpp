@@ -2,16 +2,16 @@
 
 PointCloud::PointCloud(const std::string& cloudName) : _cloudName(cloudName), _scaleNoise(1.f, 1.f) {}
 
-void PointCloud::loadFromPcl( const PCLPointCloud::Ptr& pointCloud ){
+void PointCloud::loadFromPcl( const PCLPointCloudXYZRGB::Ptr& pointCloud ){
 
     _PointCloud.reserve( pointCloud->points.size() );
 
-    for(PCLPointCloud::iterator it = pointCloud->begin(); it < pointCloud->end(); it++){
+    for(PCLPointCloudXYZRGB::iterator it = pointCloud->begin(); it < pointCloud->end(); it++){
         _PointCloud.push_back( *it );
     }
 }
 
-void PointCloud::copyFrom(const std::vector<pcl::PointXYZRGB, Eigen::aligned_allocator<pcl::PointXYZRGB> >& pcl_data, 
+void PointCloud::copyFrom(const PCLptXYZRGB_Vector& pcl_data,
                           const Vector3d& t,
                           const Vector3& q){
 
@@ -26,7 +26,7 @@ void PointCloud::copyFrom(const std::vector<pcl::PointXYZRGB, Eigen::aligned_all
     _init_guess_q = q;
 }
 
-bool PointCloud::getPointCloudFilteredAtWithRange(const int &i, const float &range, pcl::PointXYZRGB &pt){
+bool PointCloud::getPointCloudFilteredAtWithRange(const int &i, const float &range, PCLptXYZRGB &pt){
 
     Vector2 mean(0,0);
     for(unsigned int iter = 0; iter < _PointCloudFiltered.size(); ++iter){
@@ -46,16 +46,17 @@ void PointCloud::planeNormalization(){
 
     pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
     pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
-    pcl::SACSegmentation<pcl::PointXYZ> seg;
+    PCLsegmentationXYZ seg;
+
     seg.setOptimizeCoefficients (true);
     seg.setModelType (pcl::SACMODEL_PLANE);
     seg.setMethodType (pcl::SAC_RANSAC);
     seg.setDistanceThreshold (0.01);
 
     // Computing Moving PointCloud Plane Equation
-    pcl::PointCloud<pcl::PointXYZ>::Ptr temp_xyz_pcl( new pcl::PointCloud<pcl::PointXYZ> );
+    PCLPointCloudXYZ::Ptr temp_xyz_pcl( new PCLPointCloudXYZ() );
     for( unsigned int i = 0; i < _PointCloud.size(); i+=10){
-        pcl::PointXYZ curr_pt;
+        PCLptXYZ curr_pt;
         curr_pt.getArray3fMap() = _PointCloud[i].getArray3fMap();
         temp_xyz_pcl->points.push_back( curr_pt );
     }
@@ -85,15 +86,17 @@ void PointCloud::planeNormalization(){
 
     R.translation() << Vector3(0,0,coefficients->values[3]);
     transformPointCloud(R);
+
+    return;
 }
 
 void PointCloud::downsamplePointCloud(const float &downsampl_range){
 
     // Generating temporary PCL PointCloud
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr temp_xyzrgb_pcl( new pcl::PointCloud<pcl::PointXYZRGB> );
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr filtered_xyzrgb_pcl( new pcl::PointCloud<pcl::PointXYZRGB> );
+    PCLPointCloudXYZRGB::Ptr temp_xyzrgb_pcl( new PCLPointCloudXYZRGB() );
+    PCLPointCloudXYZRGB::Ptr filtered_xyzrgb_pcl( new PCLPointCloudXYZRGB() );
     for( unsigned int i = 0; i < _PointCloudFiltered.size(); ++i){
-        pcl::PointXYZRGB curr_pt;
+        PCLptXYZRGB curr_pt;
         curr_pt.getArray3fMap() = _PointCloudFiltered[i].getArray3fMap();
         curr_pt.r = _PointCloudFiltered[i].r;
         curr_pt.g = _PointCloudFiltered[i].g;
@@ -102,7 +105,7 @@ void PointCloud::downsamplePointCloud(const float &downsampl_range){
     }
 
     // Filtering the PCL PointCloud
-    pcl::VoxelGrid<pcl::PointXYZRGB> filter;
+    PCLvoxelGridXYZRGB filter;
     filter.setInputCloud (temp_xyzrgb_pcl);
     filter.setLeafSize (downsampl_range, downsampl_range, downsampl_range);
     filter.filter (*filtered_xyzrgb_pcl);
@@ -113,10 +116,10 @@ void PointCloud::downsamplePointCloud(const float &downsampl_range){
         _PointCloudFiltered.push_back( filtered_xyzrgb_pcl->points[iter] );
 
     // Generating temporary PCL PointCloud
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr temp_xyzrgb_pcl2( new pcl::PointCloud<pcl::PointXYZRGB> );
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr filtered_xyzrgb_pcl2( new pcl::PointCloud<pcl::PointXYZRGB> );
+    PCLPointCloudXYZRGB::Ptr temp_xyzrgb_pcl2( new PCLPointCloudXYZRGB() );
+    PCLPointCloudXYZRGB::Ptr filtered_xyzrgb_pcl2( new PCLPointCloudXYZRGB() );
     for( unsigned int i = 0; i < _PointCloud.size(); ++i){
-        pcl::PointXYZRGB curr_pt;
+        PCLptXYZRGB curr_pt;
         curr_pt.getArray3fMap() = _PointCloud[i].getArray3fMap();
         curr_pt.r = _PointCloud[i].r;
         curr_pt.g = _PointCloud[i].g;
@@ -125,7 +128,7 @@ void PointCloud::downsamplePointCloud(const float &downsampl_range){
     }
 
     // Filtering the PCL PointCloud
-    pcl::VoxelGrid<pcl::PointXYZRGB> filter2;
+    PCLvoxelGridXYZRGB filter2;
     filter2.setInputCloud (temp_xyzrgb_pcl2);
     filter2.setLeafSize (downsampl_range, downsampl_range, downsampl_range);
     filter2.filter (*filtered_xyzrgb_pcl2);
@@ -197,7 +200,7 @@ void PointCloud::computeDesifiedPCL(const cv::Size& outp_img_size, const Vector2
 void PointCloud::computeFilteredPcl(const Vector3i &color){
 
     float r, b, g, sum, ExG = 0.f;
-    for( pcl::PointXYZRGB pt : _PointCloud ){
+    for( PCLptXYZRGB pt : _PointCloud ){
         sum = (int)pt.r + (int)pt.g + (int)pt.b;
         r = (int)pt.r / sum;
         g = (int)pt.g / sum;
@@ -205,7 +208,7 @@ void PointCloud::computeFilteredPcl(const Vector3i &color){
         ExG = (2 * g - b - r) * 255.0;
         ExG = std::max(0.f, ExG);
         if(ExG > 50){
-            pcl::PointXYZRGB new_pt;
+            PCLptXYZRGB new_pt;
             new_pt.getVector3fMap() = pt.getVector3fMap();
             new_pt.r = color(0); new_pt.g = color(1); new_pt.b = color(2);
             _PointCloudFiltered.push_back( new_pt );
@@ -213,9 +216,9 @@ void PointCloud::computeFilteredPcl(const Vector3i &color){
     }
 }
 
-pcl::PointXYZRGB PointCloud::computeAveragePoint(const std::vector<int>& Idx, const std::vector<float>& Radius, const float& range){
+PCLptXYZRGB PointCloud::computeAveragePoint(const std::vector<int>& Idx, const std::vector<float>& Radius, const float& range){
 
-    pcl::PointXYZRGB pt;
+    PCLptXYZRGB pt;
     float sum = 0.f; float x = 0.f; float y = 0.f;
     float z = 0.f; float r = 0.f; float g = 0.f; float b = 0.f;
     for(unsigned int iter = 0; iter < Idx.size(); ++iter){
@@ -244,14 +247,14 @@ void PointCloud::computeImgs(const Vector2& offset, const Vector3i& color, const
     for(unsigned int c = 0; c < _ElevImg.cols; ++c){
         for(unsigned int r = 0; r < _ElevImg.rows; ++r){
 
-            pcl::PointXYZ searchPoint( 0 + ( (float)r - _ElevImg.rows/2 ) * size_mt/_ElevImg.rows,
+            PCLptXYZ searchPoint( 0 + ( (float)r - _ElevImg.rows/2 ) * size_mt/_ElevImg.rows,
                                        0 + ( (float)c - _ElevImg.cols/2 ) * size_mt/_ElevImg.cols, 0.f );
 
             std::vector<int> pointIdxRadiusSearch;
             std::vector<float> pointRadiusSquaredDistance;
             if ( planar_kdtree.radiusSearch (searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0 ){
 
-                pcl::PointXYZRGB pt;
+                PCLptXYZRGB pt;
                 if(take_higher){
                     pt = getHighestPoint(pointIdxRadiusSearch, _PointCloud);
                 } else {
@@ -273,14 +276,14 @@ void PointCloud::computeImgs(const Vector2& offset, const Vector3i& color, const
     for(unsigned int c = 0; c < _ExGImg.cols; ++c){
         for(unsigned int r = 0; r < _ExGImg.rows; ++r){
 
-            pcl::PointXYZ searchPoint( offset(0) + ( (float)r - _ExGImg.rows/2 ) * size_mt/_ExGImg.rows,
+            PCLptXYZ searchPoint( offset(0) + ( (float)r - _ExGImg.rows/2 ) * size_mt/_ExGImg.rows,
                                        offset(1) + ( (float)c - _ExGImg.cols/2 ) * size_mt/_ExGImg.cols, 0.f );
 
             std::vector<int> pointIdxRadiusSearch;
             std::vector<float> pointRadiusSquaredDistance;
 
              if ( planar_kdtree.radiusSearch (searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0 ){
-                pcl::PointXYZRGB pt;
+                PCLptXYZRGB pt;
                 if(take_higher){
                      pt = getHighestPoint(pointIdxRadiusSearch, _PointCloud);
                 } else {
@@ -331,7 +334,7 @@ void PointCloud::computeImgs(const Vector2& offset, const Vector3i& color, const
 
 void PointCloud::computePlanarKDTree(){
 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr xyz_pcl( new pcl::PointCloud<pcl::PointXYZ> );
+    PCLPointCloudXYZ::Ptr xyz_pcl( new PCLPointCloudXYZ() );
     for( unsigned int i = 0; i < _PointCloud.size(); ++i)
             xyz_pcl->points.push_back( pcl::PointXYZ( _PointCloud[i].x, _PointCloud[i].y,  0.f) );
 
@@ -373,7 +376,7 @@ void PointCloud::addNoise(const float& scaleMag, const float& TranslMag, const f
 
 void PointCloud::BrightnessEnhancement(const int& brightness, const bool& convertToBW){
 
-    for( pcl::PointXYZRGB& pt : _PointCloud){
+    for( PCLptXYZRGB& pt : _PointCloud){
         pt.r = cv::saturate_cast<uchar>( pt.r + (uchar)brightness );
         pt.g = cv::saturate_cast<uchar>( pt.g + (uchar)brightness );
         pt.b = cv::saturate_cast<uchar>( pt.b + (uchar)brightness );
