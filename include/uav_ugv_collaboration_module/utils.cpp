@@ -76,6 +76,20 @@ unsigned char computeExGforPoint(const PCLptXYZRGB& pt,
         return ExG;
 }
 
+unsigned char computeExGforXYZRGBPoint(const PCLptXYZRGB& pt){
+
+        float red, blue, green, sum, ExG, sumNorm = 0.f;
+        sum = (int)pt.r  + (int)pt.g  + (int)pt.b;
+        red = (int)pt.r / sum;
+        green = (int)pt.g / sum;
+        blue = (int)pt.b / sum;
+        sumNorm = blue + green + red;
+        ExG = (2 * green - blue - red) * 255.0;
+        ExG = std::max(0.f, ExG);
+
+        return ExG;
+}
+
 PCLptXYZRGB getHighestPoint(std::vector<int>& pt_list,
                             PCLptXYZRGB_Vector& pt_cloud){
 

@@ -32,6 +32,8 @@ int main(int argc, char **argv) {
     //pclAligner.computeDensifiedPCLs( "crop_fixed_cloud", "moving_cloud", cv::Size(1300,1300) );
     //pclAligner.Match("crop_fixed_cloud", "moving_cloud", pclAligner.getInitMovScale(), ExpIDStr, cv::Size(1300,1300) );
 
+    std::exit(1);
+
     PointCloudViz viz;
     viz.setViewerBackground(255,255,255);
     //viz.showCloud( pclAligner.getPointCloud("fixed_cloud")->getPointCloud(), "fixed_cloud" );
@@ -39,6 +41,7 @@ int main(int argc, char **argv) {
     //viz.showCloud( pclAligner.getPointCloud("crop_fixed_cloud")->getPointCloudFiltered(), "crop_fixed_cloud" );
     //viz.showCloud( pclAligner.getPointCloud("moving_cloud")->getPointCloud(), "moving_cloud" );
     viz.showCloud( pclAligner.pclMap["moving_cloud"] , "moving_cloud" );
+    //viz.showCloud( pclAligner.pclMap["fixed_cloud"], "fixed_cloud");
     //viz.showCloud( pclAligner.getPointCloud("crop_fixed_cloud")->getPointCloudFiltered(), "crop_fixed_cloud" );
     viz.spingUntilDeath();
 

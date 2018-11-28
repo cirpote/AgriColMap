@@ -32,6 +32,10 @@ void PointCloudAlignerNew::computeAndApplyInitialRelativeGuess(const std::string
             cerr << FYEL("Moving_Cloud Rot_z amount: ") << initGuessQMap[moving_cloud_key](2) << "\n";
             cerr << FYEL("Init alignment guess: ") << GTtfMap[moving_cloud_key]->translation().transpose() << "\n" << "\n";
         }
+
+        EnvironmentRepresentation er(moving_cloud_key);
+        er.loadFromPCLcloud(pclMap[moving_cloud_key], 0.02);
+        er.computeMMGridMap();
 }       
 
 void PointCloudAlignerNew::addNoise(const std::string& cloud_key, const float& scaleMag, const float& TranslMag, const float& YawMag){

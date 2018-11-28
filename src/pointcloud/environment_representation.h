@@ -20,6 +20,10 @@ class EnvironmentRepresentation{
         ~EnvironmentRepresentation(){}
 
         void loadFromPCLcloud(const PCLPointCloudXYZRGB::Ptr& pointCloud , const float &square_size);
+        void computeMMGridMap();
+        PCLptXYZRGB computeAveragePoint(std::vector<PCLptXYZRGB> &ptVec,
+                                        const unsigned int& col,
+                                        const unsigned int& row);
 
         /*void computeFilteredPcl(const Vector3i& color);
         void loadFromPcl( const PCLPointCloudXYZRGB::Ptr& pointCloud );
@@ -64,8 +68,10 @@ class EnvironmentRepresentation{
         std::vector< std::vector<PCLptXYZRGB> > _gridMap;
         const std::string _cloudName;
         int _width, _height = 0;
-
-        int computeExGfromVector(std::vector<PCLptXYZRGB> &ptVec);
+        PCLptXYZRGB minPt, maxPt;
+        float _square_size, x_coord, y_coord;
+        cv::Mat exgImg, elevImg, xyzImg, xyzImgUChar, exgImgColor;
+        int altitude_scale;
 
         /*PCLptXYZRGB computeAveragePoint(const std::vector<int>& Idx, const std::vector<float>& Radius, const float &range);
         void computeImgs(const Vector2& offset, const Vector3i& color, const bool& take_higher);
