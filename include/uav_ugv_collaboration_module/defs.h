@@ -17,9 +17,11 @@
 #include <pcl/io/ply_io.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/visualization/pcl_visualizer.h>
+#include <pcl/common/common.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/common/transforms.h>
 
 // CPM Header
 #include "../../CPM/CPM.h"
@@ -118,4 +120,5 @@ typedef std::vector< PCLptXYZRGB, Eigen::aligned_allocator<PCLptXYZRGB> > PCLptX
 typedef std::vector< _PointData, Eigen::aligned_allocator<_PointData> > PointData_Vector;
 typedef pcl::KdTreeFLANN<PCLptXYZ> PCLKDtreeXYZ;
 typedef pcl::SACSegmentation<PCLptXYZ> PCLsegmentationXYZ;
+typedef pcl::SACSegmentation<PCLptXYZRGB> PCLsegmentationXYZRGB;
 typedef pcl::VoxelGrid<pcl::PointXYZRGB> PCLvoxelGridXYZRGB;

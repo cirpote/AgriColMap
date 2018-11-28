@@ -10,52 +10,65 @@ void PointCloudAlignerNew::computeAndApplyInitialRelativeGuess(const std::string
         if( getVerbosityLevel() )
             cerr << FBLU("Compute And Applying The Relative Initial Guess!") << "\n";
 
-        getPointCloud(fixed_cloud_key)->planeNormalization();
-        getPointCloud(moving_cloud_key)->planeNormalization();
+        planeNormalization(fixed_cloud_key);
+        planeNormalization(moving_cloud_key);
 
-        /*Vector3d mov_t, fix_t; Vector3 mov_q, fix_q;
-        fix_t = getPointCloud(fixed_cloud_key)->getInitGuessT();
-        fix_q = getPointCloud(fixed_cloud_key)->getInitGuessQ();
-        mov_t = getPointCloud(moving_cloud_key)->getInitGuessT();
-        mov_q = getPointCloud(moving_cloud_key)->getInitGuessQ();*/
-
-        // Normalizing along the Yaw Axis the Fixed Cloud
-        /*Transform Rot_z_fixed = Transform::Identity();
-        Rot_z_fixed.rotate( Eigen::AngleAxisf( getPointCloud(fixed_cloud_key)->getInitGuessQ()(2)*(3.14/180), Vector3::UnitZ() ) );
-        getPointCloud(fixed_cloud_key)->transformPointCloud(Rot_z_fixed);*/
-
-        /*// Normalizing along the Roll and Pitch Axes the Moving Cloud
-        Transform Rot_xy_moving = Transform::Identity();
-        Rot_xy_moving.rotate( Eigen::AngleAxisf( getPointCloud(moving_cloud_key)->getInitGuessQ()(0)*(3.14/180), Vector3::UnitX() ) );
-        Rot_xy_moving.rotate( Eigen::AngleAxisf( getPointCloud(moving_cloud_key)->getInitGuessQ()(1)*(3.14/180), Vector3::UnitY() ) );
-        getPointCloud(moving_cloud_key)->transformPointCloud(Rot_xy_moving);
-
-        // Normalizing along the Yaw Axes the Moving Cloud
-        Transform Rot_z_moving = Transform::Identity();
-        Rot_z_moving.rotate( Eigen::AngleAxisf( getPointCloud(moving_cloud_key)->getInitGuessQ()(2)*(3.14/180), Vector3::UnitZ() ) );
-        getPointCloud(moving_cloud_key)->transformPointCloud(Rot_z_moving);*/
+        //getPointCloud(fixed_cloud_key)->planeNormalization();
+        //getPointCloud(moving_cloud_key)->planeNormalization();
 
         // Normalized along X and Y axis the Fixed Cloud
-        Vector3d diff_t( getPointCloud(moving_cloud_key)->getInitGuessT() - getPointCloud(fixed_cloud_key)->getInitGuessT() );
-        _InitTfMap.emplace(moving_cloud_key, boost::shared_ptr<Transform>(new Transform(Transform::Identity())) );
-        _InitTfMap[moving_cloud_key]->translation() << diff_t.cast<float>();
-        //TinitGuess.translation() << diff_t.cast<float>();
-        //getPointCloud(fixed_cloud_key)->transformPointCloud(TinitGuess);
-        //setTinitGuess(TinitGuess);
+        Vector3d diff_t( initGuessTMap[moving_cloud_key] - initGuessTMap[fixed_cloud_key] );
+                    //getPointCloud(moving_cloud_key)->getInitGuessT() - getPointCloud(fixed_cloud_key)->getInitGuessT() );
+        GTtfMap.emplace(moving_cloud_key, boost::shared_ptr<Transform>(new Transform(Transform::Identity())) );
+        GTtfMap[moving_cloud_key]->translation() << diff_t.cast<float>();
 
-        _init_mov_scale(0) *= _pclMap[moving_cloud_key]->getScaleNoise()(0);
-        _init_mov_scale(1) *= _pclMap[moving_cloud_key]->getScaleNoise()(1);
+        _init_mov_scale(0) *= _scaleNoise(0);
+        _init_mov_scale(1) *= _scaleNoise(1);
         cerr << FBLU("InitMovScale Set to: ") << _init_mov_scale.transpose() << "\n";
-        scalePointCloud( _init_mov_scale, "moving_cloud");
+        scalePointCloud( _init_mov_scale, moving_cloud_key);
 
         if( getVerbosityLevel() ){
-            cerr << FYEL("Fixed_Cloud Rot_z amount: ") << getPointCloud(fixed_cloud_key)->getInitGuessQ()(2) << "\n";
-            cerr << FYEL("Moving_Cloud Rot_z amount: ") << getPointCloud(moving_cloud_key)->getInitGuessQ()(2) << "\n";
-            cerr << FYEL("Init alignment guess: ") << _InitTfMap[moving_cloud_key]->translation().transpose() << "\n" << "\n";
+            cerr << FYEL("Fixed_Cloud Rot_z amount: ") << initGuessQMap[fixed_cloud_key](2) << "\n";
+            cerr << FYEL("Moving_Cloud Rot_z amount: ") << initGuessQMap[moving_cloud_key](2) << "\n";
+            cerr << FYEL("Init alignment guess: ") << GTtfMap[moving_cloud_key]->translation().transpose() << "\n" << "\n";
         }
 }       
 
-void PointCloudAlignerNew::computeDensifiedPCLs( const std::string& fixed_cloud, const std::string& moving_cloud, const cv::Size& outp_img_size ){
+void PointCloudAlignerNew::addNoise(const std::string& cloud_key, const float& scaleMag, const float& TranslMag, const float& YawMag){
+
+    srand (time(NULL));
+    Vector2d vd(1.f, 0.f);
+    Vector2 v(1.f,0.f);
+    float CircleSamplingAngle = ( static_cast <float> (rand()) / static_cast <float> (RAND_MAX) ) * 6.28;
+
+    // Translational Noise With Sampling over a Fixed Input Magnitude
+    _TranslNoise = Eigen::Rotation2Dd( CircleSamplingAngle )*vd;
+    _TranslNoise(0) *= TranslMag +  ( .025*TranslMag - ( static_cast <float> (rand()) / static_cast <float> (RAND_MAX) ) * (.05 * TranslMag ) );
+    _TranslNoise(1) *= TranslMag +  ( .025*TranslMag - ( static_cast <float> (rand()) / static_cast <float> (RAND_MAX) ) * (.05 * TranslMag ) );
+    cerr << FBLU("Translational Noise: ") << _TranslNoise.transpose() <<
+            FBLU(" Translational Norm: ") << _TranslNoise.norm() <<
+            FBLU(" _init_guess_t: ") << initGuessTMap[cloud_key].head(2).transpose() <<  //_init_guess_t.head(2).transpose() <<
+            FBLU(" _init_guess_t + Noise: ")  <<  (initGuessTMap[cloud_key].head(2) + _TranslNoise).transpose() << "\n"; //(_init_guess_t.head(2) + _TranslNoise).transpose() << "\n";
+    initGuessTMap[cloud_key](0) += _TranslNoise(0);
+    initGuessTMap[cloud_key](1) += _TranslNoise(1);
+
+    // Translational Noise With Sampling over a Fixed Input Magnitude
+    _YawNoise = YawMag + ( .025*YawMag - ( static_cast <float> (rand()) / static_cast <float> (RAND_MAX) ) * (.05 * YawMag ) );
+    cerr << FBLU("Yaw Rotational Noise: ") << _YawNoise << "\n";
+    //_init_guess_q(2) += _YawNoise;
+    initGuessQMap[cloud_key](2) += _YawNoise;
+
+    // Translational Noise With Sampling over a Fixed Input Magnitude
+    Vector2 vS = Eigen::Rotation2Df( CircleSamplingAngle )*v;
+    vS(0) *= scaleMag + (.025*scaleMag - ( static_cast <float> (rand()) / static_cast <float> (RAND_MAX) ) * (.05 * scaleMag ));
+    vS(1) *= scaleMag + (.025*scaleMag - ( static_cast <float> (rand()) / static_cast <float> (RAND_MAX) ) * (.05 * scaleMag ));
+    _scaleNoise += vS;
+
+    cerr << FBLU(" Scale Noise: ") << vS.transpose() << FBLU(" Scale Norm: ") << vS.norm() << "\n";
+}
+
+
+/*void PointCloudAlignerNew::computeDensifiedPCLs( const std::string& fixed_cloud, const std::string& moving_cloud, const cv::Size& outp_img_size ){
 
     getPointCloud(fixed_cloud)->computeDesifiedPCL(outp_img_size, _InitTfMap[moving_cloud]->translation().head(2), getPackagePath(), Vector3i(255,0,0));
 
@@ -561,4 +574,4 @@ void PointCloudAlignerNew::Match( const std::string& cloud1_name, const std::str
         std::cerr << FBLU("Initial Scale: ") << scale.transpose() << "\n";
     }
     writeAffineTransform(iter_num, cloud2_name);
-}
+}*/

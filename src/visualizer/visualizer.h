@@ -15,7 +15,7 @@ class PointCloudViz{
 
         void removeCloud(const std::string &cloud_to_show);
 
-        void showCloud(const std::vector< pcl::PointXYZRGB, Eigen::aligned_allocator<pcl::PointXYZRGB> >& points,
+        void showCloud(const PCLPointCloudXYZRGB::Ptr points,
                        const std::string &cloud_to_show, const int& size = 1);
         void showTransparentCloud(const std::vector< pcl::PointXYZRGB, Eigen::aligned_allocator<pcl::PointXYZRGB> >& points,
                        const std::string &cloud_to_show, const int& size = 1);

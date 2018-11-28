@@ -27,12 +27,8 @@ void PointCloudViz::removeCloud(const std::string &cloud_to_show){
     viewer->removePointCloud(cloud_to_show);
 }
 
-void PointCloudViz::showCloud(const std::vector< pcl::PointXYZRGB, Eigen::aligned_allocator<pcl::PointXYZRGB> >& points,
-                               const std::string& cloud_to_show , const int &size){
-
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud( new pcl::PointCloud<pcl::PointXYZRGB> );
-    for( pcl::PointXYZRGB pt : points)
-        cloud->points.push_back( pt );
+void PointCloudViz::showCloud(const PCLPointCloudXYZRGB::Ptr cloud,
+                              const std::string& cloud_to_show , const int &size){
 
     pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> RGB(cloud);
     viewer->addPointCloud<pcl::PointXYZRGB> (cloud, RGB, cloud_to_show);

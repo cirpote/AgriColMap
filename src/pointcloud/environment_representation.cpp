@@ -1,19 +1,82 @@
-#include "pointcloud.h"
+#include "environment_representation.h"
 
-PointCloud::PointCloud(const std::string& cloudName) : _cloudName(cloudName), _scaleNoise(1.f, 1.f) {}
+EnvironmentRepresentation::EnvironmentRepresentation(const std::string& cloudName) : _cloudName(cloudName) {} //, _scaleNoise(1.f, 1.f) {}
 
-void PointCloud::loadFromPcl( const PCLPointCloudXYZRGB::Ptr& pointCloud ){
+void EnvironmentRepresentation::loadFromPCLcloud( const PCLPointCloudXYZRGB::Ptr& pointCloud, const float& square_size ){
 
-    _PointCloud.reserve( pointCloud->points.size() );
+    PCLptXYZRGB minPt, maxPt;
+    pcl::getMinMax3D(*pointCloud, minPt, maxPt);
 
-    for(PCLPointCloudXYZRGB::iterator it = pointCloud->begin(); it < pointCloud->end(); it++){
-        _PointCloud.push_back( *it );
+    _width = std::ceil( (maxPt.x - minPt.x) / square_size );
+    _height = std::ceil( (maxPt.y - minPt.y) / square_size );
+
+    PCLptXYZRGB init_pt;
+    init_pt.x = 0.f; init_pt.y = 0.f; init_pt.z = 0.f;
+
+    std::vector<PCLptXYZRGB> init_pt_vector(50, init_pt);
+    _gridMap = std::vector< std::vector<PCLptXYZRGB> >( _width * _height, init_pt_vector );
+
+    PCLPointCloudXYZ::Ptr organized_gridmap_pcl( new PCLPointCloudXYZ(1, _width * _height) );
+
+    float x_coord = minPt.x;
+    float y_coord = maxPt.y;
+
+    for(unsigned int r = 0; r < _height; ++r){
+        for(unsigned int c = 0; c < _width; ++c){
+            organized_gridmap_pcl->points[c + r * _width].x = x_coord + c * square_size;
+            organized_gridmap_pcl->points[c + r * _width].y = y_coord - r * square_size;
+            organized_gridmap_pcl->points[c + r * _width].z = 0.f;
+        }
     }
 
-    //pclpcl = PCLptXYZRGB::Ptr( pointCloud );
+    PCLKDtreeXYZ kdTreeXYZ;
+    kdTreeXYZ.setInputCloud(organized_gridmap_pcl);
+    float radius = 0.01;
+    for( PCLptXYZRGB pt : pointCloud->points){
+        PCLptXYZ searchPoint( pt.x, pt.y, 0 );
+        std::vector<int> pointIdxRadiusSearch;
+        std::vector<float> pointRadiusSquaredDistance;
+        if ( kdTreeXYZ.radiusSearch(searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0 ){
+            float x_idx = organized_gridmap_pcl->points[pointIdxRadiusSearch[0]].x;
+            float y_idx = organized_gridmap_pcl->points[pointIdxRadiusSearch[0]].y;
+            int c_idx = (x_idx - x_coord) / square_size;
+            int r_idx = (y_coord - y_idx) / square_size;
+            _gridMap[c_idx + r_idx * _width].push_back(pt);
+        }
+    }
+
 }
 
-void PointCloud::copyFrom(const PCLptXYZRGB_Vector& pcl_data,
+int EnvironmentRepresentation::computeExGfromVector(std::vector<PCLptXYZRGB>& ptVec){
+
+    float red, blue, green, sum, ExG, sumNorm = 0.f;
+    int iter = 0;
+    for( PCLptXYZRGB pt : ptVec ){
+        if(pt.getVector3fMap().norm() > 1e-4){
+            red += (int)pt.r;
+            blue += (int)pt.b;
+            green += (int)pt.g;
+            iter++;
+        }
+    }
+
+    red /= iter;
+    green /= iter;
+    blue /= iter;
+
+    sum = red + green + blue;
+    red = red / sum;
+    green = green / sum;
+    blue = blue / sum;
+
+    sumNorm = blue + green + red;
+    ExG = (2 * green - blue - red) * 255.0;
+    ExG = std::max(0.f, ExG);
+
+    return ExG;
+}
+
+/*void PointCloud::copyFrom(const PCLptXYZRGB_Vector& pcl_data,
                           const Vector3d& t,
                           const Vector3& q){
 
@@ -388,4 +451,4 @@ void PointCloud::BrightnessEnhancement(const int& brightness, const bool& conver
             pt.r = (int)grayscale; pt.g = (int)grayscale; pt.b = (int)grayscale;
         }
     }
-}
+}*/

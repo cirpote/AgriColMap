@@ -4,7 +4,7 @@ using namespace std;
 
 PointCloudAligner::PointCloudAligner() :_R(Matrix3::Identity()), _t(Vector3::Zero()) {}
 
-void PointCloudAligner::computeAndApplyInitialRelativeGuess(const std::string& fixed_cloud_key, 
+/*void PointCloudAligner::computeAndApplyInitialRelativeGuess(const std::string& fixed_cloud_key,
                                                             const std::string& moving_cloud_key){
 
         if( getVerbosityLevel() )
@@ -559,4 +559,4 @@ void PointCloudAligner::Match( const std::string& cloud1_name, const std::string
     }
 
     writeAffineTransform(iter_num, cloud2_name);
-}
+}*/
