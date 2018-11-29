@@ -60,14 +60,6 @@ void PointCloudHandler::planeNormalization(const std::string& cloud_key){
     seg.setMethodType (pcl::SAC_RANSAC);
     seg.setDistanceThreshold (0.01);
 
-    // Computing Moving PointCloud Plane Equation
-    /*PCLPointCloudXYZ::Ptr temp_xyz_pcl( new PCLPointCloudXYZ() );
-    for( unsigned int i = 0; i < _PointCloud.size(); i+=10){
-        PCLptXYZ curr_pt;
-        curr_pt.getArray3fMap() = _PointCloud[i].getArray3fMap();
-        temp_xyz_pcl->points.push_back( curr_pt );
-    }*/
-
     //seg.setInputCloud (temp_xyz_pcl);
     seg.setInputCloud (pclMap[cloud_key]);
     seg.segment (*inliers, *coefficients);
@@ -152,21 +144,18 @@ void PointCloudHandler::loadFromDisk(const std::string& fixed_cloud_key, const s
         getline(mov_fixed_pcl, affine_gt_tf);
         Matrix3 _Rgt; Vector3 _tgt; Vector2 _scl;
         AffineTransformFromString(affine_gt_tf, _Rgt, _tgt, _scl);
-        _GTMap.emplace( moving_cloud_key, boost::shared_ptr<GroundTruth>(new GroundTruth(_Rgt, _tgt, _scl)));
+        GTtfMap.emplace( moving_cloud_key, boost::shared_ptr<GroundTruth>(new GroundTruth(_Rgt, _tgt, _scl)));
     }
 
     if(_verbosity && groundTruth){
-        cerr << FYEL("Ground Truth Affine Matrix: ") << "\n" << _GTMap[moving_cloud_key]->_Rgt << "\n";
-        cerr << FYEL("Ground Truth Translation: ") << _GTMap[moving_cloud_key]->_tgt.transpose() << "\n";
-        cerr << FYEL("Ground Truth Relative Scale: ") << _GTMap[moving_cloud_key]->_rel_scl.transpose() << "\n" << "\n";
+        cerr << FYEL("Ground Truth Affine Matrix: ") << "\n" << GTtfMap[moving_cloud_key]->_Rgt << "\n";
+        cerr << FYEL("Ground Truth Translation: ") << GTtfMap[moving_cloud_key]->_tgt.transpose() << "\n";
+        cerr << FYEL("Ground Truth Relative Scale: ") << GTtfMap[moving_cloud_key]->_rel_scl.transpose() << "\n" << "\n";
     }
 
-    // new environment representation under test
-    //EnvironmentRepresentation er(moving_cloud_key);
-    //er.loadFromPCLcloud(_pclMap[moving_cloud_key]->_PointCloud, 0.02);
 }
 
-void PointCloudHandler::cropFixedPointCloud(const std::string& crop_cloud, const std::string& mov_cloud, const std::string& fix_cloud){
+/*void PointCloudHandler::cropFixedPointCloud(const std::string& crop_cloud, const std::string& mov_cloud, const std::string& fix_cloud){
 
     _pclMap.emplace( crop_cloud, boost::make_shared<PointCloud>( crop_cloud ) );
     PCLptXYZRGB_Vector filt_pcl;
@@ -196,7 +185,7 @@ void PointCloudHandler::loadFixedCloudFromDisk(const std::string &cloud_name, co
     Rot_z.rotate( Eigen::AngleAxisf( q(2)*(3.14/180), Vector3::UnitZ() ) );
     _pclMap[cloud_key]->transformPointCloud(Rot_z);
 
-}
+}*/
 
 void PointCloudHandler::scalePointCloud(const Vector2 &scale_factors, const string &cloud_to_scale){
 
@@ -207,7 +196,7 @@ void PointCloudHandler::scalePointCloud(const Vector2 &scale_factors, const stri
 
 }
 
-void PointCloudHandler::loadMovingCloudFromDisk(const std::string &cloud_name, const std::string &cloud_path,
+/*void PointCloudHandler::loadMovingCloudFromDisk(const std::string &cloud_name, const std::string &cloud_path,
                                                 const std::string &cloud_key, const std::string &fixed_cloud_key, const Vector2 &scale){
 
     loadCloud(cloud_name, cloud_path, cloud_key);
@@ -253,4 +242,4 @@ void PointCloudHandler::loadMovingCloudFromDisk(const std::string &cloud_name, c
         cerr << FYEL("Ground Truth Translation: ") << _GTMap[cloud_key]->_tgt.transpose() << "\n";
         cerr << FYEL("Ground Truth Relative Scale: ") << _GTMap[cloud_key]->_rel_scl.transpose() << "\n" << "\n";
     }
-}
+}*/

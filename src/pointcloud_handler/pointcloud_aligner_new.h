@@ -30,6 +30,7 @@ class PointCloudAlignerNew : public PointCloudHandler{
         void writeAffineTransform(const string& iter, const string &cloud);
         void writeAffineTransformCPD(const string& iter, const string& cloud);*/
 
+        std::unordered_map<std::string, const boost::shared_ptr<EnvironmentRepresentation> > ERMap;
 
     private:
 

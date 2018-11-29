@@ -19,8 +19,8 @@ void PointCloudAlignerNew::computeAndApplyInitialRelativeGuess(const std::string
         // Normalized along X and Y axis the Fixed Cloud
         Vector3d diff_t( initGuessTMap[moving_cloud_key] - initGuessTMap[fixed_cloud_key] );
                     //getPointCloud(moving_cloud_key)->getInitGuessT() - getPointCloud(fixed_cloud_key)->getInitGuessT() );
-        GTtfMap.emplace(moving_cloud_key, boost::shared_ptr<Transform>(new Transform(Transform::Identity())) );
-        GTtfMap[moving_cloud_key]->translation() << diff_t.cast<float>();
+        _initTfMap.emplace(moving_cloud_key, boost::shared_ptr<Transform>(new Transform(Transform::Identity())) );
+        _initTfMap[moving_cloud_key]->translation() << diff_t.cast<float>();
 
         _init_mov_scale(0) *= _scaleNoise(0);
         _init_mov_scale(1) *= _scaleNoise(1);
@@ -30,12 +30,17 @@ void PointCloudAlignerNew::computeAndApplyInitialRelativeGuess(const std::string
         if( getVerbosityLevel() ){
             cerr << FYEL("Fixed_Cloud Rot_z amount: ") << initGuessQMap[fixed_cloud_key](2) << "\n";
             cerr << FYEL("Moving_Cloud Rot_z amount: ") << initGuessQMap[moving_cloud_key](2) << "\n";
-            cerr << FYEL("Init alignment guess: ") << GTtfMap[moving_cloud_key]->translation().transpose() << "\n" << "\n";
+            cerr << FYEL("Init alignment guess: ") << _initTfMap[moving_cloud_key]->translation().transpose() << "\n" << "\n";
         }
 
-        EnvironmentRepresentation er(moving_cloud_key);
-        er.loadFromPCLcloud(pclMap[moving_cloud_key], 0.02);
-        er.computeMMGridMap();
+        ERMap.emplace( moving_cloud_key, boost::shared_ptr<EnvironmentRepresentation> ( new EnvironmentRepresentation(moving_cloud_key) ) );
+        ERMap[moving_cloud_key]->loadFromPCLcloud( pclMap[moving_cloud_key], 0.02 );
+        ERMap[moving_cloud_key]->computeMMGridMap();
+
+        ERMap.emplace( fixed_cloud_key, boost::shared_ptr<EnvironmentRepresentation> ( new EnvironmentRepresentation(fixed_cloud_key) ) );
+        ERMap[fixed_cloud_key]->loadFromPCLcloud( pclMap[fixed_cloud_key], 0.02, diff_t.head(2).cast<float>() );
+        ERMap[fixed_cloud_key]->computeMMGridMap();
+
 }       
 
 void PointCloudAlignerNew::addNoise(const std::string& cloud_key, const float& scaleMag, const float& TranslMag, const float& YawMag){
