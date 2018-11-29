@@ -23,6 +23,9 @@ class PointCloudAlignerNew : public PointCloudHandler{
                       const float& TranslMag,
                       const float& YawMag);
 
+        void computeExGFilteredPointClouds(const std::string& mov_cloud_key, const std::string& fix_cloud_key);
+        void computeEnvironmentalModels(const std::string& mov_cloud_key, const std::string& fix_cloud_key);
+
         /*void computeDensifiedPCLs(const std::string& fixed_cloud,
                                    const std::string& moving_cloud,
                                    const cv::Size& outp_img_size = cv::Size(1000,1000));

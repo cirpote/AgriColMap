@@ -42,6 +42,7 @@ class PointCloudHandler{
 
         // New variables
         std::unordered_map< std::string, PCLPointCloudXYZRGB::Ptr> pclMap;
+        std::unordered_map< std::string, PCLPointCloudXYZRGB::Ptr> pclMapFiltered;
         std::unordered_map< std::string, Vector3d> initGuessTMap;
         std::unordered_map< std::string, Vector3> initGuessQMap;
         GroundTruthUnorderedMap GTtfMap;

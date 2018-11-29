@@ -25,18 +25,19 @@ int main(int argc, char **argv) {
     string ExpIDStr = argv[5];
 
     // Adding Noise to Initial Guess
-    //pclAligner.getPointCloud("moving_cloud")->addNoise( scaleMag, TranslNoiseMag, YawNoiseMag );
     pclAligner.addNoise( "moving_cloud", scaleMag, TranslNoiseMag, YawNoiseMag );
     pclAligner.computeAndApplyInitialRelativeGuess("fixed_cloud", "moving_cloud");
-    //pclAligner.cropFixedPointCloud("crop_fixed_cloud", "moving_cloud", "fixed_cloud");
-    //pclAligner.computeDensifiedPCLs( "crop_fixed_cloud", "moving_cloud", cv::Size(1300,1300) );
+    pclAligner.computeExGFilteredPointClouds("moving_cloud", "fixed_cloud");
+    pclAligner.computeEnvironmentalModels("moving_cloud", "fixed_cloud");
+
+
     //pclAligner.Match("crop_fixed_cloud", "moving_cloud", pclAligner.getInitMovScale(), ExpIDStr, cv::Size(1300,1300) );
+
 
     cv::imshow( "fixed_rgbImg", pclAligner.ERMap["moving_cloud"]->getRgbImg() );
     cv::imshow( "moving_rgbImg", pclAligner.ERMap["fixed_cloud"]->getRgbImg() );
     cv::waitKey(0);
     cv::destroyAllWindows();
-    std::exit(1);
 
     PointCloudViz viz;
     viz.setViewerBackground(255,255,255);
@@ -44,8 +45,8 @@ int main(int argc, char **argv) {
     //viz.showCloud( pclAligner.getPointCloud("moving_cloud")->getPointCloud(), "moving_cloud" );
     //viz.showCloud( pclAligner.getPointCloud("crop_fixed_cloud")->getPointCloudFiltered(), "crop_fixed_cloud" );
     //viz.showCloud( pclAligner.getPointCloud("moving_cloud")->getPointCloud(), "moving_cloud" );
-    viz.showCloud( pclAligner.pclMap["fixed_cloud"] , "fixed_cloud" );
-    viz.showCloud( pclAligner.pclMap["moving_cloud"], "moving_cloud");
+    viz.showCloud( pclAligner.pclMapFiltered["fixed_cloud"] , "fixed_cloud" );
+    viz.showCloud( pclAligner.pclMapFiltered["moving_cloud"], "moving_cloud");
     //viz.showCloud( pclAligner.getPointCloud("crop_fixed_cloud")->getPointCloudFiltered(), "crop_fixed_cloud" );
     viz.spingUntilDeath();
 

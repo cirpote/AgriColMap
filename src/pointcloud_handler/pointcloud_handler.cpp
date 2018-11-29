@@ -7,14 +7,13 @@ void PointCloudHandler::loadCloud(const std::string &cloud_name, const std::stri
     ifstream input_pcl( input_pcl_str );
     if(!input_pcl)
         ExitWithErrorMsg("File Does Not Exist: " + input_pcl_str);
-
-    //_pclMap.emplace( cloud_key, boost::make_shared<PointCloud>(cloud_key) );
+;
     PCLPointCloudXYZRGB::Ptr _pcl_data( new PCLPointCloudXYZRGB() );
     pcl::io::loadPLYFile<PCLptXYZRGB> ( input_pcl_str, *_pcl_data);
 
     //_pclMap[cloud_key]->loadFromPcl(_pcl_data);
     pclMap.emplace( cloud_key, _pcl_data );
-    cerr << FGRN("Correctly Imported: ") << input_pcl_str << " " << pclMap[cloud_key]->points.size() << " Points" << "\n";  //_pclMap[cloud_key]->getSize() << " Points" << "\n";
+    cerr << FGRN("Correctly Imported: ") << input_pcl_str << " " << pclMap[cloud_key]->points.size() << " Points" << "\n";
 
     // Reading the fixed Offset
     string fixed_offset;
@@ -24,29 +23,19 @@ void PointCloudHandler::loadCloud(const std::string &cloud_name, const std::stri
     initGuessTMap.emplace(cloud_key, Vector3d(fixed_utm_vec[0], fixed_utm_vec[1], fixed_utm_vec[2]));
     initGuessQMap.emplace(cloud_key, Vector3(fixed_utm_vec[3], fixed_utm_vec[4], fixed_utm_vec[5]));
 
-    //_pclMap[ cloud_key ]->setInitGuessT( Vector3d(fixed_utm_vec[0], fixed_utm_vec[1], fixed_utm_vec[2]) );
-    //_pclMap[ cloud_key ]->setInitGuessQ( Vector3(fixed_utm_vec[3], fixed_utm_vec[4], fixed_utm_vec[5]) );
-
-    //init_guess_T_mov = Vector3d(fixed_utm_vec[0], fixed_utm_vec[1], fixed_utm_vec[2]);
-    //init_guess_Q_mov = Vector3(fixed_utm_vec[3], fixed_utm_vec[4], fixed_utm_vec[5]);
-
     if(_verbosity){
-        //cerr << FYEL("Initial Guess T Correctly Imported: ") << _pclMap[cloud_key]->getInitGuessT().transpose() << "\n";
-        //cerr << FYEL("Initial Guess Q Correctly Imported: ") << _pclMap[cloud_key]->getInitGuessQ().transpose() << "\n" << "\n";
         cerr << FYEL("Initial Guess T Correctly Imported: ") << initGuessTMap[cloud_key].transpose() << "\n";
         cerr << FYEL("Initial Guess Q Correctly Imported: ") << initGuessQMap[cloud_key].transpose() << "\n" << "\n";
     }
 
     Vector3 mean(0.f, 0.f, 0.f);
-    for(unsigned int i = 0; i < pclMap[cloud_key]->points.size(); ++i)//_pclMap[cloud_key]->getSize(); ++i)
-        mean += pclMap[cloud_key]->points[i].getVector3fMap(); //_pclMap[cloud_key]->getPointCloudAt(i).getVector3fMap();
-    mean /= pclMap[cloud_key]->points.size();//_pclMap[cloud_key]->getSize();
+    for(unsigned int i = 0; i < pclMap[cloud_key]->points.size(); ++i)
+        mean += pclMap[cloud_key]->points[i].getVector3fMap();
+    mean /= pclMap[cloud_key]->points.size();
 
     Transform norm_T( Transform::Identity() );
     norm_T.translation() << -mean;
     pcl::transformPointCloud(*pclMap[cloud_key], *pclMap[cloud_key], norm_T);
-    //_pclMap[cloud_key]->transformPointCloud(norm_T);
-
 }
 
 void PointCloudHandler::planeNormalization(const std::string& cloud_key){

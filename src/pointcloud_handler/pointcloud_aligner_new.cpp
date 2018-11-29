@@ -13,9 +13,6 @@ void PointCloudAlignerNew::computeAndApplyInitialRelativeGuess(const std::string
         planeNormalization(fixed_cloud_key);
         planeNormalization(moving_cloud_key);
 
-        //getPointCloud(fixed_cloud_key)->planeNormalization();
-        //getPointCloud(moving_cloud_key)->planeNormalization();
-
         // Normalized along X and Y axis the Fixed Cloud
         Vector3d diff_t( initGuessTMap[moving_cloud_key] - initGuessTMap[fixed_cloud_key] );
                     //getPointCloud(moving_cloud_key)->getInitGuessT() - getPointCloud(fixed_cloud_key)->getInitGuessT() );
@@ -33,15 +30,44 @@ void PointCloudAlignerNew::computeAndApplyInitialRelativeGuess(const std::string
             cerr << FYEL("Init alignment guess: ") << _initTfMap[moving_cloud_key]->translation().transpose() << "\n" << "\n";
         }
 
-        ERMap.emplace( moving_cloud_key, boost::shared_ptr<EnvironmentRepresentation> ( new EnvironmentRepresentation(moving_cloud_key) ) );
-        ERMap[moving_cloud_key]->loadFromPCLcloud( pclMap[moving_cloud_key], 0.02 );
-        ERMap[moving_cloud_key]->computeMMGridMap();
-
-        ERMap.emplace( fixed_cloud_key, boost::shared_ptr<EnvironmentRepresentation> ( new EnvironmentRepresentation(fixed_cloud_key) ) );
-        ERMap[fixed_cloud_key]->loadFromPCLcloud( pclMap[fixed_cloud_key], 0.02, diff_t.head(2).cast<float>() );
-        ERMap[fixed_cloud_key]->computeMMGridMap();
-
 }       
+
+void PointCloudAlignerNew::computeExGFilteredPointClouds(const string &mov_cloud_key, const string &fix_cloud_key){
+
+    PCLPointCloudXYZRGB::Ptr _mov_data_filtered( new PCLPointCloudXYZRGB() );
+    for(PCLptXYZRGB pt : pclMap[mov_cloud_key]->points){
+        if( (float) computeExGforXYZRGBPoint(pt) > 30){
+            pt.r = 0; pt.g = 0; pt.b = 255;
+            _mov_data_filtered->points.push_back(pt);
+        }
+    }
+    pclMapFiltered.emplace( mov_cloud_key, _mov_data_filtered );
+
+
+    PCLPointCloudXYZRGB::Ptr _fix_data_filtered( new PCLPointCloudXYZRGB() );
+    for(PCLptXYZRGB pt : pclMap[fix_cloud_key]->points){
+        if( (float) computeExGforXYZRGBPoint(pt) > 30){
+            pt.r = 255; pt.g = 0; pt.b = 0;
+            _fix_data_filtered->points.push_back(pt);
+        }
+    }
+    pclMapFiltered.emplace( fix_cloud_key, _fix_data_filtered );
+
+    return;
+}
+
+void PointCloudAlignerNew::computeEnvironmentalModels(const string &mov_cloud_key, const string &fix_cloud_key){
+
+    ERMap.emplace( mov_cloud_key, boost::shared_ptr<EnvironmentRepresentation> ( new EnvironmentRepresentation(mov_cloud_key) ) );
+    ERMap[mov_cloud_key]->loadFromPCLcloud( pclMap[mov_cloud_key], 0.02 );
+    ERMap[mov_cloud_key]->computeMMGridMap();
+
+    ERMap.emplace( fix_cloud_key, boost::shared_ptr<EnvironmentRepresentation> ( new EnvironmentRepresentation(fix_cloud_key) ) );
+    ERMap[fix_cloud_key]->loadFromPCLcloud( pclMap[fix_cloud_key], 0.02, _initTfMap[mov_cloud_key]->translation().head(2) );
+    ERMap[fix_cloud_key]->computeMMGridMap();
+
+    return;
+}
 
 void PointCloudAlignerNew::addNoise(const std::string& cloud_key, const float& scaleMag, const float& TranslMag, const float& YawMag){
 
