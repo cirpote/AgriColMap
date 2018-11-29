@@ -85,6 +85,8 @@ void EnvironmentRepresentation::computeMMGridMap(){
     elevImg = cv::Mat( cv::Size(_height, _width), CV_8UC1, cv::Scalar(0) );
     xyzImg = cv::Mat( cv::Size(_height, _width), CV_32FC3, cv::Scalar(0,0,0) );
     exgImgColor = cv::Mat( cv::Size(_height, _width), CV_8UC3, cv::Scalar(0,0,0) );
+    rgbImg = cv::Mat( cv::Size(_height, _width), CV_8UC3, cv::Scalar(0,0,0) );
+
     int iter = 0;
     for(unsigned int r = 0; r < _height; ++r){
         for(unsigned int c = 0; c < _width; ++c, ++iter){
@@ -96,6 +98,9 @@ void EnvironmentRepresentation::computeMMGridMap(){
             xyzImg.at<cv::Vec3f>(c,r)[0] = pt.x;
             xyzImg.at<cv::Vec3f>(c,r)[1] = pt.y;
             xyzImg.at<cv::Vec3f>(c,r)[2] = pt.z;
+            rgbImg.at<cv::Vec3b>(c,r)[0] = pt.b;
+            rgbImg.at<cv::Vec3b>(c,r)[1] = pt.g;
+            rgbImg.at<cv::Vec3b>(c,r)[2] = pt.r;
         }
     }
 
@@ -105,6 +110,11 @@ void EnvironmentRepresentation::computeMMGridMap(){
     cv::imshow("exgImgColor", exgImgColor);
     cv::imshow("elevImg", elevImg);
     cv::imshow("xyzImgUChar", xyzImgUChar);
+    cv::imshow("rgbImg", rgbImg);
+    /*cv::imwrite("rgbImg.png", rgbImg);
+    cv::imwrite("exgImgColor.png", exgImgColor);
+    cv::imwrite("elevImg.png", elevImg);
+    cv::imwrite("xyzImgUChar.png", xyzImgUChar);*/
     cv::waitKey(0);
     cv::destroyAllWindows();
 }

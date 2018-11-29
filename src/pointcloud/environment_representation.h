@@ -70,7 +70,7 @@ class EnvironmentRepresentation{
         int _width, _height = 0;
         PCLptXYZRGB minPt, maxPt;
         float _square_size, x_coord, y_coord;
-        cv::Mat exgImg, elevImg, xyzImg, xyzImgUChar, exgImgColor;
+        cv::Mat exgImg, elevImg, xyzImg, xyzImgUChar, exgImgColor, rgbImg;
         int altitude_scale;
 
         /*PCLptXYZRGB computeAveragePoint(const std::vector<int>& Idx, const std::vector<float>& Radius, const float &range);
