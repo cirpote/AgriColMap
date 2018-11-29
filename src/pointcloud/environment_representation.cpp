@@ -61,6 +61,7 @@ PCLptXYZRGB EnvironmentRepresentation::computeAveragePoint(std::vector<PCLptXYZR
     float z = 0.f; float r = 0.f; float g = 0.f; float b = 0.f;
     Vector2 nom_pt(x_coord + col * _square_size, y_coord - row * _square_size);
     float radius = 0.01;
+    int iter = 0;
     for( PCLptXYZRGB pt : ptVec ){
         if(pt.getVector3fMap().norm() > 1e-4){
             float weight = ( nom_pt - pt.getVector3fMap().head(2) ).norm()/radius;
@@ -71,15 +72,18 @@ PCLptXYZRGB EnvironmentRepresentation::computeAveragePoint(std::vector<PCLptXYZR
             r += (float)pt.r*weight;
             g += (float)pt.g*weight;
             b += (float)pt.b*weight;
+            iter++;
         }
     }
-    pt.x = x/sum;
-    pt.y = y/sum;
-    pt.z = z/sum;
-    pt.r = (int)(r/sum);
-    pt.g = (int)(g/sum);
-    pt.b = (int)(b/sum);
-    return pt;
+    if(iter){
+        pt.x = x/sum;
+        pt.y = y/sum;
+        pt.z = z/sum;
+        pt.r = (int)(r/sum);
+        pt.g = (int)(g/sum);
+        pt.b = (int)(b/sum);
+        return pt;
+    }
 }
 
 void EnvironmentRepresentation::computeMMGridMap(){
@@ -95,6 +99,8 @@ void EnvironmentRepresentation::computeMMGridMap(){
     for(unsigned int r = 0; r < _height; ++r){
         for(unsigned int c = 0; c < _width; ++c, ++iter){
             PCLptXYZRGB pt = computeAveragePoint(_gridMap[iter], c, r);
+            if( pt.getVector3fMap().norm() <= 1e-3 )
+                continue;
             int ExG = computeExGforXYZRGBPoint(pt);
             exgImg.at<uchar>(c,r) = ExG;
             exgImgColor.at<cv::Vec3b>(c,r)[1] = ExG;

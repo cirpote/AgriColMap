@@ -30,8 +30,7 @@ int main(int argc, char **argv) {
     pclAligner.computeExGFilteredPointClouds("moving_cloud", "fixed_cloud");
     pclAligner.computeEnvironmentalModels("moving_cloud", "fixed_cloud");
 
-
-    //pclAligner.Match("crop_fixed_cloud", "moving_cloud", pclAligner.getInitMovScale(), ExpIDStr, cv::Size(1300,1300) );
+    pclAligner.Match("fixed_cloud", "moving_cloud", pclAligner.getInitMovScale(), ExpIDStr, cv::Size(1300,1300) );
 
 
     cv::imshow( "fixed_rgbImg", pclAligner.ERMap["moving_cloud"]->getRgbImg() );
