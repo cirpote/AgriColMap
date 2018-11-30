@@ -12,12 +12,12 @@ input_clouds:
 aligner_params:
 
   # Dense Opt. Flow, and Final Ref. Params
-  max_iter_number:                    3
+  max_iter_number:                    2
   verbosity:                          true
   store_dense_optical_flow:           true
   show_dpf_correspondences:           true
   dense_optical_flow_step:            3
-  downsampling_rate:                  0.13
+  downsampling_rate:                  0.15
   search_radius:                      0.15
   use_visual_features:                true
   use_geometric_features:             false

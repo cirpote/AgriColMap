@@ -1,4 +1,4 @@
 add_subdirectory(node)
-add_subdirectory(pointcloud)
+add_subdirectory(evironment_model)
 add_subdirectory(pointcloud_handler)
 add_subdirectory(visualizer)

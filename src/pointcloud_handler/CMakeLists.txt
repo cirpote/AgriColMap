@@ -1,2 +1,2 @@
 add_library(pointcloud_aligner_lib SHARED pointcloud_aligner.cpp pointcloud_handler.cpp pointcloud_aligner_new.cpp) #ground_truth_evaluation.cpp
-target_link_libraries(pointcloud_aligner_lib pointcloud_lib environment_representation_lib cpm_lib Library-C++)
+target_link_libraries(pointcloud_aligner_lib environment_representation_lib cpm_lib Library-C++)
