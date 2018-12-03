@@ -117,7 +117,9 @@ void PointCloudHandler::initFromYaml(const std::string& yaml_file){
     _downsampling_rate = configuration["aligner_params"]["downsampling_rate"].as<float>();
     _search_radius = configuration["aligner_params"]["search_radius"].as<float>();
     _useVisualFeatures = configuration["aligner_params"]["use_visual_features"].as<bool>();
+    _vis_feat_weight = configuration["aligner_params"]["visual_features_weight"].as<float>();
     _useGeometricFeatures = configuration["aligner_params"]["use_geometric_features"].as<bool>();
+    _geom_feat_weight = configuration["aligner_params"]["geometric_features_weight"].as<float>();
 
 }
 

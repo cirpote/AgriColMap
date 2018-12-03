@@ -37,7 +37,7 @@ corresponding to one match per line.
 class CPM
 {
 public:
-	CPM();
+    CPM(const float& vis_weight, const float& geom_weight);
 	~CPM();
 
     void Match2Flow(FImage& inMat, FImage& ou, FImage& ov, int w, int h);
@@ -107,6 +107,9 @@ private:
 	IntImage _seeds2;
 	IntImage _neighbors;
 	IntImage _neighbors2;
+
+    float _vis_weight;
+    float _geom_weight;
 
 };
 

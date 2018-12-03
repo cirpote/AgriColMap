@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
     // Adding Noise to Initial Guess
     pclAligner.addNoise( "moving_cloud", scaleMag, TranslNoiseMag, YawNoiseMag );
     pclAligner.computeAndApplyInitialRelativeGuess("fixed_cloud", "moving_cloud");
-    pclAligner.computeExGFilteredPointClouds("moving_cloud", "fixed_cloud");
+    pclAligner.computeExGFilteredPointClouds("moving_cloud", Vector3i(255,0,0), "fixed_cloud", Vector3i(0,255,0));
     pclAligner.computeEnvironmentalModels("moving_cloud", "fixed_cloud");
     pclAligner.Match("fixed_cloud", "moving_cloud", pclAligner.getInitMovScale(), ExpIDStr, cv::Size(1300,1300) );
 

@@ -2,7 +2,9 @@
 
 using namespace std;
 
-PointCloudAlignerNew::PointCloudAlignerNew() : _R(Matrix3::Identity()), _t(Vector3::Zero()) {}
+PointCloudAlignerNew::PointCloudAlignerNew() : _R(Matrix3::Identity()),
+                                               _t(Vector3::Zero()),
+                                               cpm(_vis_feat_weight, _geom_feat_weight) {}
 
 void PointCloudAlignerNew::computeAndApplyInitialRelativeGuess(const std::string& fixed_cloud_key,
                                                             const std::string& moving_cloud_key){
@@ -32,12 +34,13 @@ void PointCloudAlignerNew::computeAndApplyInitialRelativeGuess(const std::string
 
 }       
 
-void PointCloudAlignerNew::computeExGFilteredPointClouds(const string &mov_cloud_key, const string &fix_cloud_key){
+void PointCloudAlignerNew::computeExGFilteredPointClouds(const string &mov_cloud_key, const Vector3i& mov_cloud_color,
+                                                         const string &fix_cloud_key, const Vector3i& fix_cloud_color){
 
     PCLPointCloudXYZRGB::Ptr _mov_data_filtered( new PCLPointCloudXYZRGB() );
     for(PCLptXYZRGB pt : pclMap[mov_cloud_key]->points){
         if( (float) computeExGforXYZRGBPoint(pt) > 30){
-            pt.r = 0; pt.g = 0; pt.b = 255;
+            pt.r = mov_cloud_color(0); pt.g = mov_cloud_color(1); pt.b = mov_cloud_color(2);
             _mov_data_filtered->points.push_back(pt);
         }
     }
@@ -47,7 +50,7 @@ void PointCloudAlignerNew::computeExGFilteredPointClouds(const string &mov_cloud
     PCLPointCloudXYZRGB::Ptr _fix_data_filtered( new PCLPointCloudXYZRGB() );
     for(PCLptXYZRGB pt : pclMap[fix_cloud_key]->points){
         if( (float) computeExGforXYZRGBPoint(pt) > 30){
-            pt.r = 255; pt.g = 0; pt.b = 0;
+            pt.r = fix_cloud_color(0); pt.g = fix_cloud_color(1); pt.b = fix_cloud_color(2);
             _fix_data_filtered->points.push_back(pt);
         }
     }

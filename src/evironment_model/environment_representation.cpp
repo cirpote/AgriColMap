@@ -56,7 +56,7 @@ PCLptXYZRGB EnvironmentRepresentation::computeAveragePoint(std::vector<PCLptXYZR
                                                            const unsigned int& col,
                                                            const unsigned int& row){
 
-    PCLptXYZRGB pt;
+    PCLptXYZRGB out_pt;
     float sum = 0.f; float x = 0.f; float y = 0.f;
     float z = 0.f; float r = 0.f; float g = 0.f; float b = 0.f;
     Vector2 nom_pt(x_coord + col * _square_size, y_coord - row * _square_size);
@@ -76,13 +76,13 @@ PCLptXYZRGB EnvironmentRepresentation::computeAveragePoint(std::vector<PCLptXYZR
         }
     }
     if(iter){
-        pt.x = x/sum;
-        pt.y = y/sum;
-        pt.z = z/sum;
-        pt.r = (int)(r/sum);
-        pt.g = (int)(g/sum);
-        pt.b = (int)(b/sum);
-        return pt;
+        out_pt.x = x/sum;
+        out_pt.y = y/sum;
+        out_pt.z = z/sum;
+        out_pt.r = (int)(r/sum);
+        out_pt.g = (int)(g/sum);
+        out_pt.b = (int)(b/sum);
+        return out_pt;
     }
 }
 

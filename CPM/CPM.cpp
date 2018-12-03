@@ -7,7 +7,7 @@
 
 #define UNKNOWN_FLOW 1e10
 
-CPM::CPM()
+CPM::CPM(const float &vis_weight, const float &geom_weight)
 {
     // default parameters
     _step = 3;
@@ -27,6 +27,8 @@ CPM::CPM()
     _im2_elev = NULL;
     _pydSeedsFlow = NULL;
     _pydSeedsFlow2 = NULL;
+    _vis_weight = vis_weight;
+    _geom_weight = geom_weight;
 }
 
 CPM::~CPM()
@@ -456,9 +458,9 @@ void CPM::NormalsAndFPFHEstimation(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pc
     fpfhEst.setSearchMethod(tree);
 
     if(ratio == 0)
-        fpfhEst.setRadiusSearch (0.1);
+        fpfhEst.setRadiusSearch (0.05);
     else
-        fpfhEst.setRadiusSearch (0.1*ratio);
+        fpfhEst.setRadiusSearch (0.05*ratio);
     fpfhEst.compute (*fpfh);
 
     return;
@@ -643,7 +645,7 @@ float CPM::MatchCost(FImage& img1, FImage& img2, UCImage* im1_exg, UCImage* im1_
 
 #endif
     //std::cerr << _useVisFeats << _useGeomFeats << "fine \n";
-    return totalDiffExg + .5*totalDiffElev;
+    return _vis_weight * totalDiffExg + _geom_weight * totalDiffElev;
 
 }
 

@@ -56,7 +56,7 @@ class PointCloudHandler{
         float _search_radius = 0.15;
         bool _useVisualFeatures = true;
         bool _useGeometricFeatures = true;
-
+        float _vis_feat_weight, _geom_feat_weight;
         const std::string _package_path;
 
         // Strings and types that encode the paths and the extensions for the Point-Clouds to measure
