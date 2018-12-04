@@ -7,7 +7,7 @@
 
 #define UNKNOWN_FLOW 1e10
 
-CPM::CPM(const float &vis_weight, const float &geom_weight)
+CPM::CPM()
 {
     // default parameters
     _step = 3;
@@ -27,8 +27,6 @@ CPM::CPM(const float &vis_weight, const float &geom_weight)
     _im2_elev = NULL;
     _pydSeedsFlow = NULL;
     _pydSeedsFlow2 = NULL;
-    _vis_weight = vis_weight;
-    _geom_weight = geom_weight;
 }
 
 CPM::~CPM()
@@ -45,6 +43,12 @@ CPM::~CPM()
         delete[] _pydSeedsFlow;
     if (_pydSeedsFlow2)
         delete[] _pydSeedsFlow2;
+}
+
+void CPM::SetMatchingWeights(float vis_weight, float geom_weight){
+
+    _vis_weight = vis_weight;
+    _geom_weight = geom_weight;
 }
 
 // draw each match as a 3x3 color block
@@ -446,7 +450,7 @@ void CPM::NormalsAndFPFHEstimation(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pc
     NormalEstimator.setInputCloud (cloud);
     pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ> ());
     NormalEstimator.setSearchMethod (tree);
-    NormalEstimator.setRadiusSearch(0.15);
+    NormalEstimator.setRadiusSearch(0.1);
     NormalEstimator.compute(*normals);
 
     // Create the FPFH estimation class, and pass the input dataset+normals to it
@@ -458,9 +462,9 @@ void CPM::NormalsAndFPFHEstimation(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pc
     fpfhEst.setSearchMethod(tree);
 
     if(ratio == 0)
-        fpfhEst.setRadiusSearch (0.05);
+        fpfhEst.setRadiusSearch (0.06);
     else
-        fpfhEst.setRadiusSearch (0.05*ratio);
+        fpfhEst.setRadiusSearch (0.06*ratio);
     fpfhEst.compute (*fpfh);
 
     return;
@@ -644,8 +648,8 @@ float CPM::MatchCost(FImage& img1, FImage& img2, UCImage* im1_exg, UCImage* im1_
             totalDiffElev += abs(p1e[idx] - p2e[idx]);
 
 #endif
-    //std::cerr << _useVisFeats << _useGeomFeats << "fine \n";
-    return _vis_weight * totalDiffExg + _geom_weight * totalDiffElev;
+    //std::cerr << _useVisFeats << " " << _useGeomFeats << " " << _vis_weight << " " << _geom_weight << "fine \n";
+    return totalDiffExg + .5 * totalDiffElev;
 
 }
 

@@ -37,7 +37,7 @@ corresponding to one match per line.
 class CPM
 {
 public:
-    CPM(const float& vis_weight, const float& geom_weight);
+    CPM();
 	~CPM();
 
     void Match2Flow(FImage& inMat, FImage& ou, FImage& ov, int w, int h);
@@ -48,6 +48,7 @@ public:
 	void SetStereoFlag(int needStereo);
 	void SetStep(int step);
     void SetParams(int step, bool useVisualFeatures, bool useGeometricFeatures);
+    void SetMatchingWeights(float vis_weight, float geom_weight);
 
 
 private:

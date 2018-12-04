@@ -154,3 +154,72 @@ void PointCloudHandler::scalePointCloud(const Vector2 &scale_factors, const stri
     pcl::transformPointCloud(*pclMap[cloud_to_scale], *pclMap[cloud_to_scale], scaling_tf);
 
 }
+
+
+void PointCloudHandler::downsamplePointClouds(const std::string& cloud1_name, const std::string& cloud2_name){
+
+    // Filtering the PCL cloud1 PointCloud
+    PCLPointCloudXYZRGB::Ptr _pcl1_filtered( new PCLPointCloudXYZRGB() );
+    PCLvoxelGridXYZRGB filter;
+    filter.setInputCloud (pclMapFiltered[cloud1_name]);
+    filter.setLeafSize (_downsampling_rate, _downsampling_rate, _downsampling_rate);
+    filter.filter (*_pcl1_filtered);
+    pclMapFilteredDownSampled.emplace( cloud1_name, _pcl1_filtered);
+
+    // Filtering the PCL cloud1 PointCloud
+    PCLPointCloudXYZRGB::Ptr _pcl2_filtered( new PCLPointCloudXYZRGB() );
+    PCLvoxelGridXYZRGB filter2;
+    filter2.setInputCloud (pclMapFiltered[cloud2_name]);
+    filter2.setLeafSize (_downsampling_rate, _downsampling_rate, _downsampling_rate);
+    filter2.filter (*_pcl2_filtered);
+    pclMapFilteredDownSampled.emplace( cloud2_name, _pcl2_filtered);
+
+    cerr << "\n";
+    cerr << FBLU("Downsampling Clouds... ") << "\n";
+    int cloud1_size = pclMapFiltered[cloud1_name]->points.size();
+    int cloud2_size = pclMapFiltered[cloud2_name]->points.size();
+    cerr << FGRN("Fixed Cloud DownSampled: ") << cloud1_size << FGRN(" ==> ") <<
+            pclMapFilteredDownSampled[cloud1_name]->points.size() << " DownSampling Factor: " << _downsampling_rate << "\n";
+    cerr << FGRN("Moving Cloud DownSampled: ") << cloud2_size << FGRN(" ==> ") <<
+            pclMapFilteredDownSampled[cloud2_name]->points.size() << " DownSampling Factor: " << _downsampling_rate << "\n" << "\n";
+}
+
+
+void PointCloudHandler::loadFixedCloudFromDisk(const std::string &cloud_name, const std::string &cloud_path,
+                                               const std::string &cloud_key){
+
+    loadCloud(cloud_name, cloud_path, cloud_key);
+    planeNormalization(cloud_key);
+}
+
+void PointCloudHandler::loadMovingCloudFromDisk(const std::string &cloud_name,
+                                                const std::string &cloud_path,
+                                                const std::string &cloud_key,
+                                                const std::string &fixed_cloud_key,
+                                                const Vector2 &scale){
+
+    loadCloud(cloud_name, cloud_path, cloud_key);
+    planeNormalization(cloud_key);
+
+    // Normalized along X and Y axis the Fixed Cloud
+    Vector3d diff_t( initGuessTMap[cloud_key] - initGuessTMap[fixed_cloud_key] );
+                //getPointCloud(moving_cloud_key)->getInitGuessT() - getPointCloud(fixed_cloud_key)->getInitGuessT() );
+    _initTfMap.emplace(cloud_key, boost::shared_ptr<Transform>(new Transform(Transform::Identity())) );
+    _initTfMap[cloud_key]->translation() << diff_t.cast<float>();
+
+    cerr << FBLU("InitMovScale Set to: ") << scale.transpose() << "\n";
+    scalePointCloud( scale, cloud_key);
+
+    string ground_truth_tf_path = _package_path + "/params/output/" + cloud_path + "_AffineGroundTruth.txt";
+        ifstream ground_truth( ground_truth_tf_path ); bool groundTruth = false;
+        if(ground_truth) {
+            string affine_gt_tf; groundTruth = true;
+            getline(ground_truth, affine_gt_tf);
+            Matrix3 _Rgt; Vector3 _tgt; Vector2 _scl;
+            AffineTransformFromString(affine_gt_tf, _Rgt, _tgt, _scl);
+            GTtfMap.emplace( cloud_key, boost::shared_ptr<GroundTruth>(new GroundTruth(_Rgt, _tgt, _scl)));
+        } else {
+            ExitWithErrorMsg("File Does Not Exist: " + ground_truth_tf_path);
+        }
+
+}

@@ -9,13 +9,10 @@
 #include <yaml-cpp/yaml.h>
 
 // Ros Headers
-#include <ros/ros.h>
-#include <ros/package.h>
 #include <opencv2/opencv.hpp>
 
 // PCL Headers
 #include <pcl/io/ply_io.h>
-#include <pcl/io/pcd_io.h>
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/common/common.h>
 #include <pcl/kdtree/kdtree_flann.h>
@@ -116,9 +113,9 @@ typedef pcl::PointXYZRGB PCLptXYZRGB;
 typedef pcl::PointXYZ PCLptXYZ;
 typedef pcl::PointCloud<PCLptXYZRGB> PCLPointCloudXYZRGB;
 typedef pcl::PointCloud<PCLptXYZ> PCLPointCloudXYZ;
-typedef std::vector< PCLptXYZRGB, Eigen::aligned_allocator<PCLptXYZRGB> > PCLptXYZRGB_Vector;
-typedef std::vector< _PointData, Eigen::aligned_allocator<_PointData> > PointData_Vector;
+typedef std::unordered_map< std::string, PCLPointCloudXYZRGB::Ptr> PCLXYZRGB_unMap;
 typedef pcl::KdTreeFLANN<PCLptXYZ> PCLKDtreeXYZ;
 typedef pcl::SACSegmentation<PCLptXYZ> PCLsegmentationXYZ;
 typedef pcl::SACSegmentation<PCLptXYZRGB> PCLsegmentationXYZRGB;
 typedef pcl::VoxelGrid<pcl::PointXYZRGB> PCLvoxelGridXYZRGB;
+typedef pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> PCLXYZRGB_viz;

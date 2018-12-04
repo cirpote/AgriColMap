@@ -1,0 +1,4 @@
+#pragma once
+
+// the following path will be set automatically during building (do not copy this file manually!)
+static const std::string _package_path = "${PACKAGE_DIR}";

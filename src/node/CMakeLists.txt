@@ -7,8 +7,8 @@ target_link_libraries(registration_node_test pointcloud_aligner_lib yaml-cpp vis
 #add_executable(visualization_node_maize visualization_node_maize.cpp)
 #target_link_libraries(visualization_node_maize pointcloud_aligner_lib yaml-cpp visualizer_lib)
 
-#add_executable(visualization_node_soybean visualization_node_soybean.cpp)
-#target_link_libraries(visualization_node_soybean pointcloud_aligner_lib yaml-cpp visualizer_lib)
+add_executable(visualization_node_soybean visualization_node_soybean.cpp)
+target_link_libraries(visualization_node_soybean pointcloud_aligner_lib yaml-cpp visualizer_lib)
 
 #add_executable(visualization_node_sugarbeet_20m visualization_node_sugarbeet_20m.cpp)
 #target_link_libraries(visualization_node_sugarbeet_20m pointcloud_aligner_lib yaml-cpp visualizer_lib)

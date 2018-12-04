@@ -34,6 +34,10 @@ class PointCloudAlignerNew : public PointCloudHandler{
                    const string& iter_num,
                    const cv::Size& size = cv::Size(1000,1000));
 
+        // getFunctions()
+        PCLPointCloudXYZRGB::Ptr inline getFilteredPcl(const std::string& cloud_to_get){ return pclMapFiltered[cloud_to_get]; }
+        PCLPointCloudXYZRGB::Ptr inline getPcl(const std::string& cloud_to_get){ return pclMap[cloud_to_get]; }
+
         std::unordered_map<std::string, const boost::shared_ptr<EnvironmentRepresentation> > ERMap;
 
     private:
@@ -54,9 +58,6 @@ class PointCloudAlignerNew : public PointCloudHandler{
         void computeAndApplyDOFTransform(const std::string& cloud1_name,
                                          const std::string& cloud2_name,
                                          int &len);
-
-        void downsamplePointClouds(const std::string& cloud1_name,
-                                   const std::string& cloud2_name);
 
         void finalRefinement(const std::string& cloud1_name,
                              const std::string& cloud2_name);

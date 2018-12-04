@@ -2,7 +2,7 @@
 
 using namespace std;
 
-PointCloudAligner::PointCloudAligner() :_R(Matrix3::Identity()), _t(Vector3::Zero()), cpm(1, 0.5) {}
+PointCloudAligner::PointCloudAligner() :_R(Matrix3::Identity()), _t(Vector3::Zero()) {}
 
 /*void PointCloudAligner::computeAndApplyInitialRelativeGuess(const std::string& fixed_cloud_key,
                                                             const std::string& moving_cloud_key){

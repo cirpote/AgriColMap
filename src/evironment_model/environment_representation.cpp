@@ -24,20 +24,39 @@ void EnvironmentRepresentation::loadFromPCLcloud( const PCLPointCloudXYZRGB::Ptr
     PCLptXYZRGB init_pt;
     init_pt.x = 0.f; init_pt.y = 0.f; init_pt.z = 0.f;
 
-    std::vector<PCLptXYZRGB> init_pt_vector(50, init_pt);
-    _gridMap = std::vector< std::vector<PCLptXYZRGB> >( _width * _height, init_pt_vector );
+    std::vector<PCLptXYZRGB> init_pt_vector(30, init_pt);
+    _gridMap = std::vector< std::vector<PCLptXYZRGB> >( _width * _height);//, init_pt_vector );
 
-    PCLPointCloudXYZ::Ptr gridmap_pcl( new PCLPointCloudXYZ(1, _width * _height) );
+    //PCLPointCloudXYZ::Ptr gridmap_pcl( new PCLPointCloudXYZ(1, _width * _height) );
 
+    srrg_core::KDTree<float, 2>::VectorTDVector kdTreeXY_points(_width * _height);
     for(unsigned int r = 0; r < _height; ++r){
         for(unsigned int c = 0; c < _width; ++c){
-            gridmap_pcl->points[c + r * _width].x = x_coord + (float) c * square_size;
-            gridmap_pcl->points[c + r * _width].y = y_coord + (float) r * square_size;
-            gridmap_pcl->points[c + r * _width].z = 0.f;
+            kdTreeXY_points[c + r * _width](0) = x_coord + (float) c * square_size;
+            kdTreeXY_points[c + r * _width](1) = y_coord + (float) r * square_size;
+            //gridmap_pcl->points[c + r * _width].x = x_coord + (float) c * square_size;
+            //gridmap_pcl->points[c + r * _width].y = y_coord + (float) r * square_size;
+            //gridmap_pcl->points[c + r * _width].z = 0.f;
         }
     }
 
-    PCLKDtreeXYZ kdTreeXYZ;
+    float leaf_range = 0.1;
+    srrg_core::KDTree<float, 2>* kd_tree = new srrg_core::KDTree<float, 2>(kdTreeXY_points, leaf_range);
+
+    for( PCLptXYZRGB pt : pointCloud->points){
+      srrg_core::KDTree<float, 2>::VectorTD query_point = pt.getVector3fMap().head(2);
+      srrg_core::KDTree<float, 2>::VectorTD answer;
+      int index;
+      float approx_distance = kd_tree->findNeighbor(answer, index, query_point, radius);
+      if (approx_distance > 0) {
+          float c_idx = ( (answer(0) - x_coord) / square_size );
+          float r_idx = ( (answer(1) - y_coord) / square_size );
+          int _gridMapIndex = c_idx + r_idx * _width;
+           _gridMap[_gridMapIndex].push_back(pt);
+      }
+    }
+
+    /*PCLKDtreeXYZ kdTreeXYZ;
     kdTreeXYZ.setInputCloud(gridmap_pcl);
     for( PCLptXYZRGB pt : pointCloud->points){
         PCLptXYZ searchPoint( pt.x, pt.y, 0 );
@@ -46,9 +65,11 @@ void EnvironmentRepresentation::loadFromPCLcloud( const PCLPointCloudXYZRGB::Ptr
         if ( kdTreeXYZ.radiusSearch(searchPoint, radius, pointIdx, SquaredDistance) > 0 ){
             float c_idx = ( (gridmap_pcl->points[pointIdx[0]].x - x_coord) / square_size );
             float r_idx = ( (gridmap_pcl->points[pointIdx[0]].y - y_coord) / square_size );
-            _gridMap[c_idx + r_idx * _width].push_back(pt);
+            int _gridMapIndex = c_idx + r_idx * _width;
+             _gridMap[_gridMapIndex].push_back(pt);
         }
-    }
+    }*/
+
 
 }
 
@@ -59,12 +80,19 @@ PCLptXYZRGB EnvironmentRepresentation::computeAveragePoint(std::vector<PCLptXYZR
     PCLptXYZRGB out_pt;
     float sum = 0.f; float x = 0.f; float y = 0.f;
     float z = 0.f; float r = 0.f; float g = 0.f; float b = 0.f;
-    Vector2 nom_pt(x_coord + col * _square_size, y_coord - row * _square_size);
+    Vector2 nom_pt(x_coord + col * _square_size, y_coord + row * _square_size);
     float radius = 0.01;
+    float std_dev = 0.04;
+    float den = 2.f * std_dev * std_dev;
     int iter = 0;
     for( PCLptXYZRGB pt : ptVec ){
         if(pt.getVector3fMap().norm() > 1e-4){
-            float weight = ( nom_pt - pt.getVector3fMap().head(2) ).norm()/radius;
+            //float weight = ( nom_pt - pt.getVector3fMap().head(2) ).norm()/radius;
+            //float weight =  float( exp ( - (double) ( ( nom_pt - pt.getVector3fMap().head(2) ).norm() ) / ( (double)(2.0 * radius * radius) ) ) );
+            float dist = ( nom_pt - pt.getVector3fMap().head(2) ).norm();
+            float weight = 1 / exp ( dist / den );
+            //setprecision(10);
+            //std::cerr << setprecision(10) << nom_pt.transpose() << " " << pt.getVector3fMap().head(2).transpose() << " " << dist << " " << 1 / exp ( dist / (2.0 * 0.04 * 0.04) )  << "\n";
             sum += weight;
             x += pt.x*weight;
             y += pt.y*weight;

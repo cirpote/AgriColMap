@@ -3,8 +3,7 @@
 using namespace std;
 
 PointCloudAlignerNew::PointCloudAlignerNew() : _R(Matrix3::Identity()),
-                                               _t(Vector3::Zero()),
-                                               cpm(_vis_feat_weight, _geom_feat_weight) {}
+                                               _t(Vector3::Zero()) {}
 
 void PointCloudAlignerNew::computeAndApplyInitialRelativeGuess(const std::string& fixed_cloud_key,
                                                             const std::string& moving_cloud_key){
@@ -61,6 +60,7 @@ void PointCloudAlignerNew::computeExGFilteredPointClouds(const string &mov_cloud
 
 void PointCloudAlignerNew::computeEnvironmentalModels(const string &mov_cloud_key, const string &fix_cloud_key){
 
+
     ERMap.emplace( mov_cloud_key, boost::shared_ptr<EnvironmentRepresentation> ( new EnvironmentRepresentation(mov_cloud_key) ) );
     ERMap[mov_cloud_key]->loadFromPCLcloud( pclMap[mov_cloud_key], 0.02 );
     ERMap[mov_cloud_key]->computeMMGridMap();
@@ -108,6 +108,7 @@ void PointCloudAlignerNew::addNoise(const std::string& cloud_key, const float& s
 void PointCloudAlignerNew::Match( const std::string& cloud1_name, const std::string& cloud2_name,
                                const Eigen::Vector2f& scale, const string& iter_num, const cv::Size& size ){
 
+    cpm.SetMatchingWeights(_vis_feat_weight, _geom_feat_weight);
     cpm.SetParams(_dense_optical_flow_step, _useVisualFeatures, _useGeometricFeatures);
     img1.imcopy( ERMap[cloud1_name]->getExgImg() );
     img2.imcopy( ERMap[cloud2_name]->getExgImg() );
@@ -251,33 +252,7 @@ void PointCloudAlignerNew::computeAndApplyDOFTransform(const std::string& cloud1
     pcl::transformPointCloud(*pclMapFiltered[cloud2_name], *pclMapFiltered[cloud2_name], LDOF_tf);
 }
 
-void PointCloudAlignerNew::downsamplePointClouds(const std::string& cloud1_name, const std::string& cloud2_name){
 
-    // Filtering the PCL cloud1 PointCloud
-    PCLPointCloudXYZRGB::Ptr _pcl1_filtered( new PCLPointCloudXYZRGB() );
-    PCLvoxelGridXYZRGB filter;
-    filter.setInputCloud (pclMapFiltered[cloud1_name]);
-    filter.setLeafSize (_downsampling_rate, _downsampling_rate, _downsampling_rate);
-    filter.filter (*_pcl1_filtered);
-    pclMapFilteredDownSampled.emplace( cloud1_name, _pcl1_filtered);
-
-    // Filtering the PCL cloud1 PointCloud
-    PCLPointCloudXYZRGB::Ptr _pcl2_filtered( new PCLPointCloudXYZRGB() );
-    PCLvoxelGridXYZRGB filter2;
-    filter2.setInputCloud (pclMapFiltered[cloud2_name]);
-    filter2.setLeafSize (_downsampling_rate, _downsampling_rate, _downsampling_rate);
-    filter2.filter (*_pcl2_filtered);
-    pclMapFilteredDownSampled.emplace( cloud2_name, _pcl2_filtered);
-
-    cerr << "\n";
-    cerr << FBLU("Downsampling Clouds... ") << "\n";
-    int cloud1_size = pclMapFiltered[cloud1_name]->points.size();
-    int cloud2_size = pclMapFiltered[cloud2_name]->points.size();
-    cerr << FGRN("Fixed Cloud DownSampled: ") << cloud1_size << FGRN(" ==> ") <<
-            pclMapFilteredDownSampled[cloud1_name]->points.size() << " DownSampling Factor: " << _downsampling_rate << "\n";
-    cerr << FGRN("Moving Cloud DownSampled: ") << cloud2_size << FGRN(" ==> ") <<
-            pclMapFilteredDownSampled[cloud2_name]->points.size() << " DownSampling Factor: " << _downsampling_rate << "\n" << "\n";
-}
 
 void PointCloudAlignerNew::finalRefinement(const string &cloud1_name, const string &cloud2_name){
 

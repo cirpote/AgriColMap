@@ -20,10 +20,10 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   std_msgs
+  srrg_core
 )
 
 catkin_package()
-
 find_package(OpenCV REQUIRED)
   message(STATUS "${PROJECT_NAME}: OpenCV version ${OpenCV_VERSION}")
 include_directories(${OpenCV_INCLUDE_DIRS})
@@ -44,4 +44,7 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/CPM)
 add_subdirectory(${PROJECT_SOURCE_DIR}/cpd)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src_GoICP)
 add_subdirectory(${PROJECT_SOURCE_DIR}/include)
+
+set(PACKAGE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/packageDir.h.in ${CMAKE_CURRENT_SOURCE_DIR}/src/packageDir.h)
 

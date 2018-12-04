@@ -15,10 +15,10 @@ aligner_params:
   # Dense Opt. Flow, and Final Ref. Params
   max_iter_number:                    3
   verbosity:                          true
-  store_dense_optical_flow:           true
+  store_dense_optical_flow:           false
   show_dpf_correspondences:           true
   dense_optical_flow_step:            3
-  downsampling_rate:                  0.08
+  downsampling_rate:                  0.12
   search_radius:                      0.15
   use_visual_features:                true
   visual_features_weight:	      1
