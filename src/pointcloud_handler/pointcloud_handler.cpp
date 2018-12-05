@@ -152,7 +152,7 @@ void PointCloudHandler::scalePointCloud(const Vector2 &scale_factors, const stri
     scaling_tf(0,0) *= scale_factors(0);
     scaling_tf(1,1) *= scale_factors(1);
     pcl::transformPointCloud(*pclMap[cloud_to_scale], *pclMap[cloud_to_scale], scaling_tf);
-
+    return;
 }
 
 
@@ -192,7 +192,7 @@ void PointCloudHandler::downsamplePCL(const std::string& cloud_name, const float
     cerr << FBLU("Downsampling " + cloud_name + " Cloud... ") << "\n";
     int cloud1_size = pclMapFiltered[cloud_name]->points.size();
     cerr << FGRN("Cloud DownSampled: ") << cloud1_size << FGRN(" ==> ") <<
-            pclMapFilteredDownSampled[cloud_name]->points.size() << " DownSampling Factor: " << down_rate << "\n";
+            pclMapFilteredDownSampled[cloud_name]->points.size() << " DownSampling Factor: " << down_rate << "\n" << "\n";
 }
 
 
@@ -233,4 +233,13 @@ void PointCloudHandler::loadMovingCloudFromDisk(const std::string &cloud_name,
             ExitWithErrorMsg("File Does Not Exist: " + ground_truth_tf_path);
         }
 
+}
+
+void PointCloudHandler::BrightnessEnhancement(const std::string& cloud_key, const int& brightness){
+
+    for( PCLptXYZRGB& pt : pclMap[cloud_key]->points ){
+        pt.r = cv::saturate_cast<uchar>( pt.r + (uchar)brightness );
+        pt.g = cv::saturate_cast<uchar>( pt.g + (uchar)brightness );
+        pt.b = cv::saturate_cast<uchar>( pt.b + (uchar)brightness );
+    }
 }

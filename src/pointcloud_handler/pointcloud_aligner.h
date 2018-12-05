@@ -5,7 +5,7 @@ class PointCloudAligner : public PointCloudHandler{
 
     public:
 
-        EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
         PointCloudAligner();
         ~PointCloudAligner(){
             std::cerr << FRED("[PointCloudAligner] deleting\n");
@@ -13,28 +13,56 @@ class PointCloudAligner : public PointCloudHandler{
         }
 
         // Set() functions
-        /*void Match(const std::string& cloud1_name, const std::string& cloud2_name, const Eigen::Vector2f& scale, const string& iter_num, const cv::Size& size = cv::Size(1000,1000));
-        void MatchCPD(const std::string& cloud1_name, const std::string& cloud2_name, const cv::Size& size, const Eigen::Vector2f& scale, const string& iter_num);
-        void MatchGoICP(const std::string& cloud1_name, const std::string& cloud2_name);
         void computeAndApplyInitialRelativeGuess(const std::string& fixed_cloud_key,
                                                  const std::string& moving_cloud_key); 
+        void addNoise(const std::string& cloud_key,
+                      const float& scaleMag,
+                      const float& TranslMag,
+                      const float& YawMag);
 
-        void computeDensifiedPCLs(const std::string& fixed_cloud,
-                                   const std::string& moving_cloud,
-                                   const cv::Size& outp_img_size = cv::Size(1000,1000));
+        void computeExGFilteredPointCloud(const string& cloud_key,
+                                           const Vector3i& cloud_color);
 
-        void writeAffineTransform(const string& iter, const string &cloud);
-        void writeAffineTransformCPD(const string& iter, const string& cloud);*/
+        void downsaplePointCloud( const string& cloud_key, const float& rate = 0.f );
 
+        void computeEnvironmentalModels(const std::string& mov_cloud_key,
+                                        const std::string& fix_cloud_key);
+
+        void GroundTruthTransformPointCloud(const std::string& cloud_key);
+
+        void Match(const std::string& cloud1_name,
+                   const std::string& cloud2_name,
+                   const Eigen::Vector2f& scale,
+                   const string& iter_num,
+                   const cv::Size& size = cv::Size(1000,1000));
+
+        // getFunctions()
+        PCLPointCloudXYZRGB::Ptr inline getFilteredPcl(const std::string& cloud_to_get){ return pclMapFiltered[cloud_to_get]; }
+        PCLPointCloudXYZRGB::Ptr inline getPcl(const std::string& cloud_to_get){ return pclMap[cloud_to_get]; }
+
+        std::unordered_map<std::string, const boost::shared_ptr<EnvironmentRepresentation> > ERMap;
 
     private:
 
-        /*FImage computeSiftCorrespondeces( const std::string& cloud1_name, const std::string& cloud2_name, const MatchingType& type);
-        void WriteDenseOpticalFlow(const int& w, const int& h, const string& cloud, const string& iter);
-        void showDOFCorrespondeces(const int& len, const string &cloud1_name, const string &cloud2_name, const cv::Size& size);
-        void computeAndApplyDOFTransform(const std::string& cloud1_name, const std::string& cloud2_name, int &len);
-        void downsamplePointClouds(const std::string& cloud1_name, const std::string& cloud2_name);
-        void finalRefinement(const std::string& cloud1_name, const std::string& cloud2_name, const Eigen::Vector2f &scale);*/
+        void showDOFCorrespondeces(const int& len,
+                                   const string &cloud1_name,
+                                   const string &cloud2_name,
+                                   const cv::Size& size);
+
+        void writeAffineTransform(const string& iter,
+                                  const string &cloud);
+
+        void WriteDenseOpticalFlow(const int& w,
+                                   const int& h,
+                                   const string& cloud,
+                                   const string& iter);
+
+        void computeAndApplyDOFTransform(const std::string& cloud1_name,
+                                         const std::string& cloud2_name,
+                                         int &len);
+
+        void finalRefinement(const std::string& cloud1_name,
+                             const std::string& cloud2_name);
 
         FImage img1, img1Cloud, img2, img2Cloud, matches, filteredMatches;
 

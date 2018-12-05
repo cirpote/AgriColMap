@@ -35,6 +35,8 @@ class PointCloudHandler{
                                      const std::string &fixed_cloud_key,
                                      const Vector2 &scale);
 
+        void BrightnessEnhancement(const std::string& cloud_key, const int& brightness);
+
         // Set Functions
         void inline setInitMovScale(const Vector2& mov_scale){ _init_mov_scale = mov_scale; }
 

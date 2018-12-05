@@ -11,10 +11,12 @@ int main(int argc, char **argv) {
     }
 
     string yaml_filename = argv[1];
+    std::string mov_cloud = "moving_cloud";
+    std::string fix_cloud = "fixed_cloud";
 
     PointCloudAligner pclAligner;
     pclAligner.initFromYaml(yaml_filename);
-    pclAligner.loadFromDisk("fixed_cloud", "moving_cloud");
+    pclAligner.loadFromDisk(fix_cloud, mov_cloud);
 
     string scaleMagStr = argv[2];
     float scaleMag = stof(scaleMagStr)/100;
@@ -25,19 +27,19 @@ int main(int argc, char **argv) {
     string ExpIDStr = argv[5];
 
     // Adding Noise to Initial Guess
-    pclAligner.getPointCloud("moving_cloud")->addNoise( scaleMag, TranslNoiseMag, YawNoiseMag );
-    pclAligner.computeAndApplyInitialRelativeGuess("fixed_cloud", "moving_cloud");
-    pclAligner.cropFixedPointCloud("crop_fixed_cloud", "moving_cloud", "fixed_cloud");
-    pclAligner.computeDensifiedPCLs( "crop_fixed_cloud", "moving_cloud", cv::Size(1300,1300) );
-
-    pclAligner.Match("crop_fixed_cloud", "moving_cloud", pclAligner.getInitMovScale(), ExpIDStr, cv::Size(1300,1300) );
+    pclAligner.addNoise( mov_cloud, scaleMag, TranslNoiseMag, YawNoiseMag );
+    pclAligner.computeAndApplyInitialRelativeGuess(fix_cloud, mov_cloud);
+    pclAligner.computeExGFilteredPointCloud(mov_cloud, Vector3i(0,0,255));
+    pclAligner.computeExGFilteredPointCloud(fix_cloud, Vector3i(255,0,0));
+    pclAligner.computeEnvironmentalModels(mov_cloud, fix_cloud);
+    pclAligner.Match(fix_cloud, mov_cloud, pclAligner.getInitMovScale(), ExpIDStr, cv::Size(1300,1300) );
 
     PointCloudViz viz;
     viz.setViewerBackground(255,255,255);
-    //viz.showCloud( pclAligner.getPointCloud("fixed_cloud")->getPointCloud(), "fixed_cloud" );
-    //viz.showCloud( pclAligner.getPointCloud("moving_cloud")->getPointCloud(), "moving_cloud" );
-    viz.showCloud( pclAligner.getPointCloud("crop_fixed_cloud")->getPointCloudFiltered(), "crop_fixed_cloud" );
-    viz.showCloud( pclAligner.getPointCloud("moving_cloud")->getPointCloudFiltered(), "moving_cloud" );
+    viz.showCloud( pclAligner.getFilteredPcl(fix_cloud), fix_cloud);
+    viz.showCloud( pclAligner.getFilteredPcl(mov_cloud), mov_cloud);
+    //viz.showCloud( pclAligner.getPcl(fix_cloud), fix_cloud);
+    //viz.showCloud( pclAligner.getPcl(mov_cloud), mov_cloud);
     viz.spingUntilDeath();
 
     return 0;

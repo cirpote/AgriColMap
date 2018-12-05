@@ -14,12 +14,9 @@ if (${CMAKE_HOST_SYSTEM_PROCESSOR} MATCHES armv7l)
 endif ()
 
 find_package(catkin REQUIRED COMPONENTS
-  nav_msgs
   pcl_conversions
   pcl_ros
   roscpp
-  sensor_msgs
-  std_msgs
   srrg_core
 )
 

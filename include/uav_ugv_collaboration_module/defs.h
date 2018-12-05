@@ -30,7 +30,6 @@
 // GoICP Header
 #include "../../src_GoICP/jly_goicp.h"
 
-#include <opencv2/xfeatures2d.hpp>
 #include <srrg_kdtree/kd_tree.hpp>
 
 /* FOREGROUND */
