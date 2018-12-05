@@ -48,10 +48,13 @@ class PointCloudHandler{
 
     protected:
 
-        void downsamplePointClouds(const std::string& cloud1_name,
-                                   const std::string& cloud2_name);
+        void downsamplePCL(const std::string& cloud_name,
+                           const float& rate = 0.f);
 
         void planeNormalization(const std::string& cloud_key);
+
+        void ExGFilterPCL(const string &cloud_key,
+                          const Vector3i& cloud_color);
 
         // External Params
         bool _storeDenseOptFlw = false;

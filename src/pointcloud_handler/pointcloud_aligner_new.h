@@ -20,10 +20,10 @@ class PointCloudAlignerNew : public PointCloudHandler{
                       const float& TranslMag,
                       const float& YawMag);
 
-        void computeExGFilteredPointClouds(const string &mov_cloud_key,
-                                           const Vector3i& mov_cloud_color,
-                                           const string &fix_cloud_key,
-                                           const Vector3i& fix_cloud_color);
+        void computeExGFilteredPointCloud(const string& cloud_key,
+                                           const Vector3i& cloud_color);
+
+        void downsaplePointCloud( const string& cloud_key, const float& rate = 0.f );
 
         void computeEnvironmentalModels(const std::string& mov_cloud_key,
                                         const std::string& fix_cloud_key);

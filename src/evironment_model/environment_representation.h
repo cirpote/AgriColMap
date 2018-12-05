@@ -1,7 +1,5 @@
 #pragma once
 #include "../../include/uav_ugv_collaboration_module/utils.h"
- 
-#include <srrg_kdtree/kd_tree.hpp>
 
 class EnvironmentRepresentation{
 

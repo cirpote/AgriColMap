@@ -31,34 +31,15 @@ void PointCloudAlignerNew::computeAndApplyInitialRelativeGuess(const std::string
             cerr << FYEL("Init alignment guess: ") << _initTfMap[moving_cloud_key]->translation().transpose() << "\n" << "\n";
         }
 
-}       
+}
 
-void PointCloudAlignerNew::computeExGFilteredPointClouds(const string &mov_cloud_key, const Vector3i& mov_cloud_color,
-                                                         const string &fix_cloud_key, const Vector3i& fix_cloud_color){
+void PointCloudAlignerNew::computeExGFilteredPointCloud(const string& cloud_key, const Vector3i& cloud_color){
 
-    PCLPointCloudXYZRGB::Ptr _mov_data_filtered( new PCLPointCloudXYZRGB() );
-    for(PCLptXYZRGB pt : pclMap[mov_cloud_key]->points){
-        if( (float) computeExGforXYZRGBPoint(pt) > 30){
-            pt.r = mov_cloud_color(0); pt.g = mov_cloud_color(1); pt.b = mov_cloud_color(2);
-            _mov_data_filtered->points.push_back(pt);
-        }
-    }
-    pclMapFiltered.emplace( mov_cloud_key, _mov_data_filtered );
-
-
-    PCLPointCloudXYZRGB::Ptr _fix_data_filtered( new PCLPointCloudXYZRGB() );
-    for(PCLptXYZRGB pt : pclMap[fix_cloud_key]->points){
-        if( (float) computeExGforXYZRGBPoint(pt) > 30){
-            pt.r = fix_cloud_color(0); pt.g = fix_cloud_color(1); pt.b = fix_cloud_color(2);
-            _fix_data_filtered->points.push_back(pt);
-        }
-    }
-    pclMapFiltered.emplace( fix_cloud_key, _fix_data_filtered );
-
+    ExGFilterPCL(cloud_key, cloud_color);
     return;
 }
 
-void PointCloudAlignerNew::computeEnvironmentalModels(const string &mov_cloud_key, const string &fix_cloud_key){
+void PointCloudAlignerNew::computeEnvironmentalModels(const string& mov_cloud_key, const string& fix_cloud_key){
 
 
     ERMap.emplace( mov_cloud_key, boost::shared_ptr<EnvironmentRepresentation> ( new EnvironmentRepresentation(mov_cloud_key) ) );
@@ -69,6 +50,12 @@ void PointCloudAlignerNew::computeEnvironmentalModels(const string &mov_cloud_ke
     ERMap[fix_cloud_key]->loadFromPCLcloud( pclMap[fix_cloud_key], 0.02, _initTfMap[mov_cloud_key]->translation().head(2) );
     ERMap[fix_cloud_key]->computeMMGridMap();
 
+    return;
+}
+
+void PointCloudAlignerNew::downsaplePointCloud(const string &cloud_key, const float &rate){
+
+    downsamplePCL(cloud_key, rate);
     return;
 }
 
@@ -135,7 +122,8 @@ void PointCloudAlignerNew::Match( const std::string& cloud1_name, const std::str
         showDOFCorrespondeces(len, cloud1_name, cloud2_name, size);
 
     computeAndApplyDOFTransform(cloud1_name, cloud2_name, len);
-    downsamplePointClouds(cloud1_name, cloud2_name);
+    downsamplePCL(cloud1_name);
+    downsamplePCL(cloud2_name);
 
     auto compute_start = std::chrono::high_resolution_clock::now();
     finalRefinement(cloud1_name, cloud2_name);
@@ -256,30 +244,30 @@ void PointCloudAlignerNew::computeAndApplyDOFTransform(const std::string& cloud1
 
 void PointCloudAlignerNew::finalRefinement(const string &cloud1_name, const string &cloud2_name){
 
-    PCLPointCloudXYZ::Ptr _pcl1_xyz( new PCLPointCloudXYZ() );
+    KDTreeXYZvector kdTreeXYZ_points( pclMapFilteredDownSampled[cloud1_name]->points.size() );
+    int it = 0;
     for( PCLptXYZRGB pt : pclMapFilteredDownSampled[cloud1_name]->points ){
-        PCLptXYZ pt_xyz;
-        pt_xyz.getVector3fMap() = pt.getVector3fMap();
-        _pcl1_xyz->points.push_back( pt_xyz );
+        kdTreeXYZ_points[it] = pt.getVector3fMap();
+        it++;
     }
 
-    PCLKDtreeXYZ kdtree;
-    kdtree.setInputCloud(_pcl1_xyz);
     vector<Vector3> fixed_pts, moving_pts;
     int iter = 0;
+    float leaf_range = 0.1;
+    KDTreeXYZ* kd_tree = new KDTreeXYZ(kdTreeXYZ_points, leaf_range);
+
     while(iter < _max_iter_num){
 
         int id = 0;
-        for( size_t i = 0; i < pclMapFilteredDownSampled[cloud2_name]->points.size(); ++i) {
+        for( PCLptXYZRGB pt : pclMapFilteredDownSampled[cloud2_name]->points){
+                KDTreeXYZpoint query_point = pt.getVector3fMap();
+                KDTreeXYZpoint answer;
+                int index;
 
-                Vector3 query = pclMapFilteredDownSampled[cloud2_name]->points[i].getVector3fMap();
-                pcl::PointXYZ searchPoint(query(0), query(1), query(2));
-                std::vector<int> pointIdxRadiusSearch;
-                std::vector<float> pointRadiusSquaredDistance;
-                if ( kdtree.radiusSearch (searchPoint, _search_radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0 ){
-                    Vector3 fix_pt = _pcl1_xyz->points[pointIdxRadiusSearch[0]].getVector3fMap();
-                    fixed_pts.push_back( fix_pt );
-                    moving_pts.push_back( query );
+                float approx_distance = kd_tree->findNeighbor(answer, index, query_point, _search_radius);
+                if (approx_distance > 0) {
+                    fixed_pts.push_back( answer );
+                    moving_pts.push_back( query_point );
                 }
             id++;
         }
@@ -311,7 +299,6 @@ void PointCloudAlignerNew::finalRefinement(const string &cloud1_name, const stri
             cerr << FYEL("Initial Alignment Translation Vector") << "\n";
             cerr << refresult.translation.transpose() << "\n" << "\n";
         }
-
 
         _R = R*_R;
         _t = R*_t + t;

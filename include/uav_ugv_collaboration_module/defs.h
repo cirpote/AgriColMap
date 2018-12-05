@@ -15,7 +15,6 @@
 #include <pcl/io/ply_io.h>
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/common/common.h>
-#include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/common/transforms.h>
@@ -32,6 +31,7 @@
 #include "../../src_GoICP/jly_goicp.h"
 
 #include <opencv2/xfeatures2d.hpp>
+#include <srrg_kdtree/kd_tree.hpp>
 
 /* FOREGROUND */
 #define RST  "\x1B[0m"
@@ -114,8 +114,15 @@ typedef pcl::PointXYZ PCLptXYZ;
 typedef pcl::PointCloud<PCLptXYZRGB> PCLPointCloudXYZRGB;
 typedef pcl::PointCloud<PCLptXYZ> PCLPointCloudXYZ;
 typedef std::unordered_map< std::string, PCLPointCloudXYZRGB::Ptr> PCLXYZRGB_unMap;
-typedef pcl::KdTreeFLANN<PCLptXYZ> PCLKDtreeXYZ;
 typedef pcl::SACSegmentation<PCLptXYZ> PCLsegmentationXYZ;
 typedef pcl::SACSegmentation<PCLptXYZRGB> PCLsegmentationXYZRGB;
 typedef pcl::VoxelGrid<pcl::PointXYZRGB> PCLvoxelGridXYZRGB;
 typedef pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> PCLXYZRGB_viz;
+typedef srrg_core::KDTree<float, 2>::VectorTD KDTreeXYpoint;
+typedef srrg_core::KDTree<float, 2>::VectorTDVector KDTreeXYvector;
+typedef srrg_core::KDTree<float, 2> KDTreeXY;
+typedef srrg_core::KDTree<float, 3>::VectorTD KDTreeXYZpoint;
+typedef srrg_core::KDTree<float, 3>::VectorTDVector KDTreeXYZvector;
+typedef srrg_core::KDTree<float, 3> KDTreeXYZ;
+
+

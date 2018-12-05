@@ -156,32 +156,43 @@ void PointCloudHandler::scalePointCloud(const Vector2 &scale_factors, const stri
 }
 
 
-void PointCloudHandler::downsamplePointClouds(const std::string& cloud1_name, const std::string& cloud2_name){
 
-    // Filtering the PCL cloud1 PointCloud
-    PCLPointCloudXYZRGB::Ptr _pcl1_filtered( new PCLPointCloudXYZRGB() );
+void PointCloudHandler::ExGFilterPCL(const string &cloud_key, const Vector3i& cloud_color){
+
+    PCLPointCloudXYZRGB::Ptr data_filtered( new PCLPointCloudXYZRGB() );
+    for(PCLptXYZRGB pt : pclMap[cloud_key]->points){
+        if( (float) computeExGforXYZRGBPoint(pt) > 30){
+            pt.r = cloud_color(0); pt.g = cloud_color(1); pt.b = cloud_color(2);
+            data_filtered->points.push_back(pt);
+        }
+    }
+    pclMapFiltered.emplace( cloud_key, data_filtered );
+    return;
+}
+
+void PointCloudHandler::downsamplePCL(const std::string& cloud_name, const float& rate){
+
+    float down_rate;
+    if( rate == 0.f )
+        down_rate = _downsampling_rate;
+    else
+        down_rate = rate;
+
+
+    // Filtering the PCL cloud PointCloud
+    PCLPointCloudXYZRGB::Ptr _pcl_filtered( new PCLPointCloudXYZRGB() );
     PCLvoxelGridXYZRGB filter;
-    filter.setInputCloud (pclMapFiltered[cloud1_name]);
-    filter.setLeafSize (_downsampling_rate, _downsampling_rate, _downsampling_rate);
-    filter.filter (*_pcl1_filtered);
-    pclMapFilteredDownSampled.emplace( cloud1_name, _pcl1_filtered);
+    filter.setInputCloud (pclMapFiltered[cloud_name]);
+    filter.setLeafSize (down_rate, down_rate, down_rate);
+    filter.filter (*_pcl_filtered);
+    pclMapFilteredDownSampled.emplace( cloud_name, _pcl_filtered);
 
-    // Filtering the PCL cloud1 PointCloud
-    PCLPointCloudXYZRGB::Ptr _pcl2_filtered( new PCLPointCloudXYZRGB() );
-    PCLvoxelGridXYZRGB filter2;
-    filter2.setInputCloud (pclMapFiltered[cloud2_name]);
-    filter2.setLeafSize (_downsampling_rate, _downsampling_rate, _downsampling_rate);
-    filter2.filter (*_pcl2_filtered);
-    pclMapFilteredDownSampled.emplace( cloud2_name, _pcl2_filtered);
 
     cerr << "\n";
-    cerr << FBLU("Downsampling Clouds... ") << "\n";
-    int cloud1_size = pclMapFiltered[cloud1_name]->points.size();
-    int cloud2_size = pclMapFiltered[cloud2_name]->points.size();
-    cerr << FGRN("Fixed Cloud DownSampled: ") << cloud1_size << FGRN(" ==> ") <<
-            pclMapFilteredDownSampled[cloud1_name]->points.size() << " DownSampling Factor: " << _downsampling_rate << "\n";
-    cerr << FGRN("Moving Cloud DownSampled: ") << cloud2_size << FGRN(" ==> ") <<
-            pclMapFilteredDownSampled[cloud2_name]->points.size() << " DownSampling Factor: " << _downsampling_rate << "\n" << "\n";
+    cerr << FBLU("Downsampling " + cloud_name + " Cloud... ") << "\n";
+    int cloud1_size = pclMapFiltered[cloud_name]->points.size();
+    cerr << FGRN("Cloud DownSampled: ") << cloud1_size << FGRN(" ==> ") <<
+            pclMapFilteredDownSampled[cloud_name]->points.size() << " DownSampling Factor: " << down_rate << "\n";
 }
 
 
