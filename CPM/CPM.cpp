@@ -1,7 +1,7 @@
 #include "CPM.h"
 #include "ImageFeature.h"
 
-#include <opencv2/xfeatures2d.hpp> // for "DAISY" descriptor
+#include <opencv2/xfeatures2d.hpp>// for "DAISY" descriptor
 
 // [4/6/2017 Yinlin.Hu]
 

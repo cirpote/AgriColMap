@@ -20,7 +20,7 @@ aligner_params:
   downsampling_rate:                  0.15
   search_radius:                      0.15
   use_visual_features:                true
-  visual_features_weight:	      1
+  visual_features_weight:	            1
   use_geometric_features:             false
   geometric_features_weight:          0.5 
 

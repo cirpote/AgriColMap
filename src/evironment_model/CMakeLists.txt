@@ -1,3 +1,2 @@
 add_library(environment_representation_lib environment_representation.cpp)
 target_link_libraries(environment_representation_lib utils_lib GoICP_lib)
-add_dependencies(environment_representation_lib ${catkin_EXPORTED_TARGETS}) 
