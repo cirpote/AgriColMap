@@ -1,5 +1,5 @@
 #pragma once
-#include "../evironment_model/environment_representation.h"
+#include "../environment_model/environment_representation.h"
 #include "../packageDir.h"
 
 using namespace std;
