@@ -23,7 +23,12 @@ class PointCloudHandler{
                           const std::string& moving_cloud_key);
 
         void scalePointCloud( const Vector2& scale_factors,
-                              const std::string& cloud_to_scale );
+                              const std::string& cloud_to_scale,
+                              const std::string& cloud_type );
+
+        void transformPointCloud( const Transform& tf,
+                                  const std::string& cloud_to_scale,
+                                  const std::string& cloud_type );
 
         void loadFixedCloudFromDisk(const std::string &cloud_name,
                                     const std::string &cloud_path,

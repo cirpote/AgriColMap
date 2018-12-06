@@ -146,15 +146,39 @@ void PointCloudHandler::loadFromDisk(const std::string& fixed_cloud_key, const s
 
 }
 
-void PointCloudHandler::scalePointCloud(const Vector2 &scale_factors, const string &cloud_to_scale){
+void PointCloudHandler::scalePointCloud(const Vector2 &scale_factors, 
+                                        const string &cloud_to_scale,
+                                        const std::string& cloud_type){
 
     Transform scaling_tf = Transform::Identity();
     scaling_tf(0,0) *= scale_factors(0);
     scaling_tf(1,1) *= scale_factors(1);
-    pcl::transformPointCloud(*pclMap[cloud_to_scale], *pclMap[cloud_to_scale], scaling_tf);
+
+    if ( cloud_type.compare("rgb") == 0 ) {
+        pcl::transformPointCloud(*pclMap[cloud_to_scale], *pclMap[cloud_to_scale], scaling_tf);
+    } else if ( cloud_type.compare("exg") == 0 ) {
+        pcl::transformPointCloud(*pclMapFiltered[cloud_to_scale], *pclMapFiltered[cloud_to_scale], scaling_tf);
+    } else if ( cloud_type.compare("exg_downsampled") == 0 ) {
+        pcl::transformPointCloud(*pclMapFilteredDownSampled[cloud_to_scale], *pclMapFilteredDownSampled[cloud_to_scale], scaling_tf);
+    }
+
     return;
 }
 
+void PointCloudHandler::transformPointCloud( const Transform& tf,
+                                             const std::string& cloud_to_scale,
+                                             const std::string& cloud_type){
+    
+    if ( cloud_type.compare("rgb") == 0 ) {
+        pcl::transformPointCloud(*pclMap[cloud_to_scale], *pclMap[cloud_to_scale], tf);
+    } else if ( cloud_type.compare("exg") == 0 ) {
+        pcl::transformPointCloud(*pclMapFiltered[cloud_to_scale], *pclMapFiltered[cloud_to_scale], tf);
+    } else if ( cloud_type.compare("exg_downsampled") == 0 ) {
+        pcl::transformPointCloud(*pclMapFilteredDownSampled[cloud_to_scale], *pclMapFilteredDownSampled[cloud_to_scale], tf);
+    }
+
+    return;
+}
 
 
 void PointCloudHandler::ExGFilterPCL(const string &cloud_key, const Vector3i& cloud_color){
@@ -214,12 +238,11 @@ void PointCloudHandler::loadMovingCloudFromDisk(const std::string &cloud_name,
 
     // Normalized along X and Y axis the Fixed Cloud
     Vector3d diff_t( initGuessTMap[cloud_key] - initGuessTMap[fixed_cloud_key] );
-                //getPointCloud(moving_cloud_key)->getInitGuessT() - getPointCloud(fixed_cloud_key)->getInitGuessT() );
     _initTfMap.emplace(cloud_key, boost::shared_ptr<Transform>(new Transform(Transform::Identity())) );
     _initTfMap[cloud_key]->translation() << diff_t.cast<float>();
 
     cerr << FBLU("InitMovScale Set to: ") << scale.transpose() << "\n";
-    scalePointCloud( scale, cloud_key);
+    scalePointCloud( scale, cloud_key, "rgb");
 
     string ground_truth_tf_path = _package_path + "/params/output/" + cloud_path + "_AffineGroundTruth.txt";
         ifstream ground_truth( ground_truth_tf_path ); bool groundTruth = false;

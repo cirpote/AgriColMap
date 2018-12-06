@@ -23,7 +23,7 @@ void PointCloudAligner::computeAndApplyInitialRelativeGuess(const std::string& f
         _init_mov_scale(0) *= _scaleNoise(0);
         _init_mov_scale(1) *= _scaleNoise(1);
         cerr << FBLU("InitMovScale Set to: ") << _init_mov_scale.transpose() << "\n";
-        scalePointCloud( _init_mov_scale, moving_cloud_key);
+        scalePointCloud( _init_mov_scale, moving_cloud_key, "rgb");
 
         if( getVerbosityLevel() ){
             cerr << FYEL("Fixed_Cloud Rot_z amount: ") << initGuessQMap[fixed_cloud_key](2) << "\n";
@@ -245,8 +245,6 @@ void PointCloudAligner::GroundTruthTransformPointCloud(const string &cloud_key){
     Transform gtTF;
     gtTF.translation() = GTtfMap[cloud_key]->_tgt;
     gtTF.linear() = GTtfMap[cloud_key]->_Rgt;
-    //gtTF.linear().col(0) *= GTtfMap[cloud_key]->_rel_scl(0);
-    //gtTF.linear().col(1) *= GTtfMap[cloud_key]->_rel_scl(1);
     pcl::transformPointCloud( *pclMap[cloud_key], *pclMap[cloud_key], gtTF );
 }
 

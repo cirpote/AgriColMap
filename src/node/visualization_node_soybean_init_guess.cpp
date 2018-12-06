@@ -12,21 +12,21 @@ int main(int argc, char **argv) {
     pclAligner.loadMovingCloudFromDisk("point_cloud", "20180524-mavic-ugv-soybean-eschikon-row4", "row4_cloud", "cloud", Vector2(5.3, 5.3) );
     pclAligner.loadMovingCloudFromDisk("point_cloud", "20180524-mavic-ugv-soybean-eschikon-row4", "row4_cloud_init_guess", "cloud", Vector2(5.3, 5.3) );
 
-    // Computing Filtered ExG Clouds
-    pclAligner.getPointCloud("cloud")->computeFilteredPcl( Vector3i(0,200,0) );
-    pclAligner.getPointCloud("row4_cloud")->computeFilteredPcl( Vector3i(255,0,0) );
-    pclAligner.getPointCloud("row4_cloud_init_guess")->computeFilteredPcl( Vector3i(0,0,255) );
-
     // Transforming Clouds with Grount Truth
     pclAligner.GroundTruthTransformPointCloud("row4_cloud");
     pclAligner.GroundTruthTransformPointCloud("row4_cloud_init_guess");
 
+    // Computing Filtered ExG Clouds
+    pclAligner.computeExGFilteredPointCloud("cloud", Vector3i(0,200,0));
+    pclAligner.computeExGFilteredPointCloud("row4_cloud", Vector3i(255,0,0));
+    pclAligner.computeExGFilteredPointCloud("row4_cloud_init_guess", Vector3i(0,0,255));
+    
     // Visualize
     PointCloudViz viz;
     viz.setViewerBackground(255,255,255);
 
-    viz.showCloud( pclAligner.getPointCloud("cloud")->getPointCloudFiltered(), "cloud" );
-    viz.showCloud( pclAligner.getPointCloud("row4_cloud")->getPointCloudFiltered(), "row4_cloud" );
+    viz.showCloud( pclAligner.getFilteredPcl("cloud"), "cloud" );
+    viz.showCloud( pclAligner.getFilteredPcl("row4_cloud"), "row4_cloud" );
     viz.setViewerPosition(0,0,80,-1,0,0);
 
     int count = 0;
@@ -41,7 +41,6 @@ int main(int argc, char **argv) {
         float yawMag = ( static_cast <float> (rand()) / static_cast <float> (RAND_MAX) ) * .6;
         float scaleMag = ( static_cast <float> (rand()) / static_cast <float> (RAND_MAX) ) * .4;
 
-
         // Translational Noise With Sampling over a Fixed Input Magnitude
         Vector2 trans = Eigen::Rotation2Df( CircleSamplingAngle )*vd;
         trans(0) *= transMag +  ( .025*transMag - ( static_cast <float> (rand()) / static_cast <float> (RAND_MAX) ) * (.05 * transMag ) );
@@ -54,25 +53,25 @@ int main(int argc, char **argv) {
         Vector2 scale = Eigen::Rotation2Df( CircleSamplingAngle )*v;
         scale(0) *= scaleMag + (.025*scaleMag - ( static_cast <float> (rand()) / static_cast <float> (RAND_MAX) ) * (.05 * scaleMag ));
         scale(1) *= scaleMag + (.025*scaleMag - ( static_cast <float> (rand()) / static_cast <float> (RAND_MAX) ) * (.05 * scaleMag ));
+        scale = Vector2(1.f,1.f) + scale;
 
         Transform noise_T(Transform::Identity());
         noise_T.translation() << trans(0), trans(1), 0;
         noise_T.rotate( Eigen::AngleAxisf( yaw, Eigen::Vector3f::UnitZ() ) );
 
-        pclAligner.getPointCloud("row4_cloud_init_guess")->scalePointCloud(scale);
-        pclAligner.getPointCloud("row4_cloud_init_guess")->transformPointCloud(noise_T);
-        viz.showCloud( pclAligner.getPointCloud("row4_cloud_init_guess")->getPointCloudFiltered(), "row4_cloud_init_guess" );
+        pclAligner.scalePointCloud(scale, "row4_cloud_init_guess", "exg");
+        pclAligner.transformPointCloud(noise_T, "row4_cloud_init_guess", "exg");
+        viz.showCloud( pclAligner.getFilteredPcl("row4_cloud_init_guess"), "row4_cloud_init_guess" );
 
         viz.spinOnce();
         sleep(1);
 
-        std::cerr << transMag << " " << trans.transpose() << " " <<
-                     yawMag << " " << yaw << " " << scaleMag << " " << scale.transpose() << "\n";
+        std::cerr << transMag << " " << trans.transpose() << " " << yawMag << " " 
+                  << yaw << " " << scaleMag << " " << scale.transpose() << "\n";
 
         viz.removeCloud("row4_cloud_init_guess");
-        pclAligner.getPointCloud("row4_cloud_init_guess")->transformPointCloud(noise_T.inverse());
-        pclAligner.getPointCloud("row4_cloud_init_guess")->scalePointCloud(Vector2(1/scale(0), 1/scale(1)));
-
+        pclAligner.transformPointCloud(noise_T.inverse(), "row4_cloud_init_guess", "exg");
+        pclAligner.scalePointCloud(Vector2(1/scale(0), 1/scale(1)), "row4_cloud_init_guess", "exg");
         count++;
     }
 
