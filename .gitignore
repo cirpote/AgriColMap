@@ -1,6 +1,5 @@
-maps
-imgs
-*.kdev4
 *.vscode
 *.m~
-params/output/*.png
+bin/
+build/
+src/packageDir.h

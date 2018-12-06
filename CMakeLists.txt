@@ -3,12 +3,16 @@ project(uav_ugv_collaboration_module)
 
 #To uncomment in the future
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=gnu++11 -fpic") # comment -march=native for ubuntu 18.04
-
 set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
+
+
 
 find_package(OpenCV REQUIRED)
   message("${PROJECT_NAME}|OpenCV version ${OpenCV_VERSION}")
 include_directories(${OpenCV_INCLUDE_DIRS})
+
+
 
 message("${PROJECT_NAME}|PROCESSOR_TYPE: [${CMAKE_HOST_SYSTEM_PROCESSOR}]")
 if (${CMAKE_HOST_SYSTEM_PROCESSOR} MATCHES armv7l)

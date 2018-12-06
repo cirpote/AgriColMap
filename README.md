@@ -1,40 +1,31 @@
 # AgriColMap: Aerial-Ground Collaborative 3D Mapping for Precision Farming #
 
-This repository contains **AgriColMap**,  an  open,  research-oriented 3D map registration system for multi-robot in farming scenarios. This software has been tested using the [UAV-UGV Collaborative Mapping Dataset](http://www.dis.uniroma1.it/~labrococo/fds/collaborativemapping.html) distributed within the [Flourish Sapienza Datasets](http://www.dis.uniroma1.it/~labrococo/fds/) collection. Please also check out our [video](https://www.youtube.com/watch?v=0J8O74TS23A&t=1sk "title").
+This repository contains **AgriColMap**,  an  open,  research-oriented 3D map registration system for multi-robot in farming scenarios. This software has been tested using the [UAV-UGV Collaborative Mapping Dataset](http://www.dis.uniroma1.it/~labrococo/fds/collaborativemapping.html) distributed within the [Flourish Sapienza Datasets](http://www.dis.uniroma1.it/~labrococo/fds/) collection. Please also check out our video:
 
-## Requirements ##
-
-The code has been tested on Ubuntu 18.04, with ROS melodic and OpenCV >= 3.2.0 (with extra modules installed). Additional requirements to install by terminal:
+## Installation with OpenCV > 3.2.0 (with extra modules) and PCL 1.8.1 ##
 
 ```bash
 sudo apt-get install libyaml-cpp-dev python-catkin-tools
-```
-
-## Building ##
-
-To build **AgriColMap** on Ubuntu, type in a terminal the following command sequence.
-
-```bash
 ## Creating the workspace 
-mkdir -p ~/agricolmap_ws/src
-git clone https://gitlab.com/srrg-software/srrg_core
-git clone https://gitlab.com/srrg-software/srrg_cmake_modules
 git clone https://bitbucket.org/cirpote/agricolmap
-cd ~/agricolmap_ws/
-catkin init && catkin build
+git submodule update --init --recursive
+cd /agricolmap && mkdir build && cd build
+cmake ..
+make -j8
 ```
 
 ### Tutorial ###
 
-In this brief tutorial, we briefly show how to use the AgriColMap to register 3D maps gathered by aerial and ground robots.
+In this tutorial, we briefly show how to use the AgriColMap to register 3D maps gathered by aerial and ground robots.
 The files you need to download are:
 
 - https://drive.google.com/uc?id=1nUYH5ofifw7xielyptZ8d2Z8G6AhiecA&export=download (Soybean Dataset)
 
-Uncompress the downloaded file into: ~/agricolmap_ws/src/agricolmap/maps/. The "Soybean Dataset" contains UAV and UGV datasets registered in a soybean farm. Other datasets are freely available on [Sapienza Collaborative Mapping Datasets](http://www.dis.uniroma1.it/~labrococo/fsd/collaborativemapping.html).
+Uncompress the downloaded file into: ${PATH_TO_AGRICOLMAP}/maps/. The "Soybean Dataset" contains UAV and UGV datasets registered in a soybean farm. Other datasets are freely available on [Sapienza Collaborative Mapping Datasets](http://www.dis.uniroma1.it/~labrococo/fsd/collaborativemapping.html).
 
 ```bash
-rosrun uav_ugv_collaboration_module registration_node src/agricolmap/params/aligner_soybean_params_row3.yaml 10 250 50 2
+cd bin
+./registration_node ../params/aligner_soybean_params_row3.yaml  10 250 50 2
 ```
 
 The 5 parameters are, respectively:
