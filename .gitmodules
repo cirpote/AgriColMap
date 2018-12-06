@@ -1,0 +1,3 @@
+[submodule "srrg_core"]
+	path = srrg_core
+	url = https://gitlab.com/srrg-software/srrg_core

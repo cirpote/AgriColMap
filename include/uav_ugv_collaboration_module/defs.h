@@ -30,7 +30,7 @@
 // GoICP Header
 #include "../../src_GoICP/jly_goicp.h"
 
-#include <srrg_kdtree/kd_tree.hpp>
+#include "../../srrg_core/src/srrg_kdtree/kd_tree.hpp"
 
 /* FOREGROUND */
 #define RST  "\x1B[0m"

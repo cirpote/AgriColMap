@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(uav_ugv_collaboration_module)
 
 #To uncomment in the future
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=gnu++11") # comment -march=native for ubuntu 18.04
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=gnu++11 -fpic") # comment -march=native for ubuntu 18.04
 
 set(CMAKE_BUILD_TYPE Release)
 
@@ -16,13 +16,6 @@ if (${CMAKE_HOST_SYSTEM_PROCESSOR} MATCHES armv7l)
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=armv7-a -mfpu=neon-vfpv4 -mfloat-abi=hard -funsafe-math-optimizations")
   message("ENABLING ARM NEON OPTIMIZATIONS")
 endif ()
-
-
-find_package(catkin REQUIRED COMPONENTS
-  srrg_core
-)
-
-catkin_package()
 
 find_package(PCL REQUIRED) 
   message("${PROJECT_NAME}|PCL version ${PCL_VERSION}")
