@@ -5,11 +5,12 @@ This repository contains **AgriColMap**,  an  open,  research-oriented 3D map re
 ## Installation with OpenCV > 3.2.0 (with extra modules) and PCL 1.8.1 ##
 
 ```bash
-sudo apt-get install libyaml-cpp-dev python-catkin-tools
+sudo apt-get install libyaml-cpp-dev
 ## Creating the workspace 
 git clone https://bitbucket.org/cirpote/agricolmap
+cd /agricolmap
 git submodule update --init --recursive
-cd /agricolmap && mkdir build && cd build
+mkdir build && cd build
 cmake ..
 make -j8
 ```
