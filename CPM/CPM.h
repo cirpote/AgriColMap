@@ -29,10 +29,16 @@ corresponding to one match per line.
 #include "ImagePyramid.h"
 #include <unordered_map>
 #include <eigen3/Eigen/Geometry>
-#include <pcl/point_types.h>
-#include <pcl/features/fpfh.h>
-#include <pcl/features/normal_3d.h>
-#include <pcl/features/fpfh_omp.h>
+
+#ifdef BUILD_WITH_PCL
+	#include "features/include/pcl/features/fpfh.h"
+	#include "features/include/pcl/features/normal_3d.h"
+	#include "features/include/pcl/features/fpfh_omp.h"
+#else
+	#include <pcl/features/fpfh.h>
+	#include <pcl/features/normal_3d.h>
+	#include <pcl/features/fpfh_omp.h>
+#endif
 
 class CPM
 {

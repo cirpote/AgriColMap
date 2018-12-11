@@ -12,12 +12,21 @@
 #include <opencv2/opencv.hpp>
 
 // PCL Headers
-#include <pcl/io/ply_io.h>
-#include <pcl/visualization/pcl_visualizer.h>
-#include <pcl/common/common.h>
-#include <pcl/filters/voxel_grid.h>
-#include <pcl/segmentation/sac_segmentation.h>
-#include <pcl/common/transforms.h>
+#ifdef BUILD_WITH_PCL
+    #include "io/include/pcl/io/ply_io.h"
+    #include "visualization/include/pcl/visualization/pcl_visualizer.h"
+    #include "common/include/pcl/common/common.h"
+    #include "filters/include/pcl/filters/voxel_grid.h"
+    #include "segmentation/include/pcl/segmentation/sac_segmentation.h"
+    #include "common/include/pcl/common/transforms.h"
+#else
+    #include <pcl/io/ply_io.h>
+    #include <pcl/visualization/pcl_visualizer.h>
+    #include <pcl/common/common.h>
+    #include <pcl/filters/voxel_grid.h>
+    #include <pcl/segmentation/sac_segmentation.h>
+    #include <pcl/common/transforms.h>
+#endif
 
 // CPM Header
 #include "../../CPM/CPM.h"
