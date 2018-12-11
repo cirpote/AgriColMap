@@ -4,8 +4,7 @@ This repository contains **AgriColMap**,  an  open,  research-oriented 3D map re
 
 Please also check out our video:
 
-<a href="https://www.youtube.com/watch?v=0J8O74TS23A&t="> <img src="http://www.dis.uniroma1.it/~labrococo/fsd/agricolmap_video_thumbnail.png" alt="https://www.youtube.com/watch?v=0J8O74TS23A&t=" width="600">
-
+<iframe width="600" src="https://www.youtube.com/watch?v=0J8O74TS23A&t="></iframe>
 
 ## Installation with OpenCV > 3.2.0 (with extra modules) and PCL >= 1.7.0 ##
 
