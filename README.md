@@ -27,7 +27,7 @@ sudo apt-get install libyaml-cpp-dev
 ## Creating the workspace 
 git clone https://bitbucket.org/cirpote/agricolmap
 cd /agricolmap
-./pcl_configure.sh
+sh pcl_configure.sh
 git submodule update --init --recursive
 mkdir build && cd build
 cmake -DBUILD_WITH_PCL=true ..
