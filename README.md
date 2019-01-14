@@ -11,7 +11,7 @@ Please also check out our video:
 ```bash
 sudo apt-get install libyaml-cpp-dev
 ## Creating the workspace 
-git clone https://bitbucket.org/cirpote/agricolmap
+git clone https://github.com/cirpote/AgriColMap.git
 cd /agricolmap
 git submodule update --init --recursive
 mkdir build && cd build
@@ -25,7 +25,7 @@ make -j8
 ```bash
 sudo apt-get install libyaml-cpp-dev
 ## Creating the workspace 
-git clone https://bitbucket.org/cirpote/agricolmap
+git clone https://github.com/cirpote/AgriColMap.git
 cd /agricolmap
 sh pcl_configure.sh
 git submodule update --init --recursive
