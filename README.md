@@ -11,7 +11,8 @@ Please also check out our video:
 ```bash
 sudo apt-get install libyaml-cpp-dev
 ## Creating the workspace 
-git clone https://bitbucket.org/cirpote/agricolmap
+git clone git clone https://github.com/cirpote/AgriColMap.git
+git checkout agricolmap_V2.0_Open3d
 cd /agricolmap
 git submodule update --init --recursive
 mkdir build && cd build
