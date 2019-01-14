@@ -8,28 +8,6 @@ Please also check out our video:
 
 ## Installation with OpenCV > 3.2.0 (with extra modules) and Open3D ##
 
-```bash
-sudo apt-get install libyaml-cpp-dev
-## Creating the workspace 
-git clone git clone https://github.com/cirpote/AgriColMap.git
-git checkout agricolmap_V2.0_Open3d
-cd /agricolmap
-git submodule update --init --recursive
-mkdir build && cd build
-cmake ..
-make -j8
-```
-
-# AgriColMap: Aerial-Ground Collaborative 3D Mapping for Precision Farming #
-
-This repository contains **AgriColMap**,  an  open,  research-oriented 3D map registration system for multi-robot in farming scenarios. This software has been tested using the [UAV-UGV Collaborative Mapping Dataset](http://www.dis.uniroma1.it/~labrococo/fds/collaborativemapping.html) distributed within the [Flourish Sapienza Datasets](http://www.dis.uniroma1.it/~labrococo/fds/) collection. 
-
-Please also check out our video:
-
-<a href="https://www.youtube.com/embed/0J8O74TS23A?autoplay=0"> <img src="http://www.dis.uniroma1.it/~labrococo/fsd/agricolmap_video_thumbnail.png" alt="https://www.youtube.com/watch?v=CrfG4v25B8k" width="600">
-
-## Installation with OpenCV > 3.2.0 (with extra modules) and Open3D ##
-
 To install the [Open3D](http://www.open3d.org/) library, follow this [guide](http://www.open3d.org/docs/compilation.html). 
 
 ```bash
