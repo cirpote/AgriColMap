@@ -13,7 +13,7 @@ input_clouds:
 aligner_params:
 
   # Dense Opt. Flow, and Final Ref. Params
-  max_iter_number:                    3
+  max_iter_number:                    1
   verbosity:                          true
   store_dense_optical_flow:           true
   show_dpf_correspondences:           true
