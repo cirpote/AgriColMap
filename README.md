@@ -6,7 +6,7 @@ Please also check out our video:
 
 <a href="https://www.youtube.com/embed/0J8O74TS23A?autoplay=0"> <img src="http://www.dis.uniroma1.it/~labrococo/fsd/agricolmap_video_thumbnail.png" alt="https://www.youtube.com/watch?v=CrfG4v25B8k" width="600">
 
-## Installation with OpenCV > 3.2.0 (with extra modules) and PCL >= 1.7.0 ##
+## Installation with OpenCV > 3.2.0 (with extra modules) and Open3D ##
 
 ```bash
 sudo apt-get install libyaml-cpp-dev
@@ -16,21 +16,6 @@ cd /agricolmap
 git submodule update --init --recursive
 mkdir build && cd build
 cmake ..
-make -j8
-```
-
-
-## Installation with OpenCV > 3.2.0 (with extra modules) without a pre-installed PCL compatible library version ##
-
-```bash
-sudo apt-get install libyaml-cpp-dev
-## Creating the workspace 
-git clone https://bitbucket.org/cirpote/agricolmap
-cd /agricolmap
-sh pcl_configure.sh
-git submodule update --init --recursive
-mkdir build && cd build
-cmake -DBUILD_WITH_PCL=true ..
 make -j8
 ```
 
