@@ -1,6 +1,17 @@
 #pragma once
 #include "../../include/uav_ugv_collaboration_module/utils.h"
 
+struct PclPoint{
+
+    PclPoint(){
+        xyz_.setZero();
+        color_.setZero();
+    }
+
+    Vector3d xyz_;
+    Vector3d color_;
+};
+
 class EnvironmentRepresentation{
 
     public:
@@ -10,9 +21,9 @@ class EnvironmentRepresentation{
         EnvironmentRepresentation(const std::string& cloudName);
         ~EnvironmentRepresentation(){}
 
-        void loadFromPCLcloud(const PCLPointCloudXYZRGB::Ptr& pointCloud,
+        void loadFromPCLcloud(const std::shared_ptr<open3d::PointCloud> pointCloud,
                               const float &square_size,
-                              const Vector2& imgCenter = Vector2(0.f, 0.f),
+                              const Vector2d& imgCenter = Vector2d(0.f, 0.f),
                               const float& radius = 0.01,
                               const cv::Size& gridMapSize = cv::Size(1300,1300) );
 
@@ -28,14 +39,14 @@ class EnvironmentRepresentation{
 
     private:
 
-        PCLptXYZRGB computeAveragePoint(std::vector<PCLptXYZRGB> &ptVec,
-                                        const unsigned int& col,
-                                        const unsigned int& row);
+        PclPoint computeAveragePoint(std::vector<PclPoint> &ptVec,
+                                     const unsigned int& col,
+                                     const unsigned int& row);
 
-        std::vector< std::vector<PCLptXYZRGB> > _gridMap;
+        std::vector< std::vector<PclPoint> > _gridMap;
         const std::string _cloudName;
         int _width, _height = 0;
-        PCLptXYZRGB minPt, maxPt;
+        Vector3d minPt, maxPt;
         float _square_size, x_coord, y_coord;
         cv::Mat exgImg, elevImg, xyzImg, xyzImgUChar, exgImgColor, rgbImg;
         int altitude_scale;

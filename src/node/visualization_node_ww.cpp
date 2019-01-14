@@ -32,32 +32,20 @@ int main(int argc, char **argv) {
     pclAligner.computeExGFilteredPointCloud("row1_cloud", Vector3i(255,0,0) );
     pclAligner.computeExGFilteredPointCloud("row2_cloud", Vector3i(0,0,255) );
 
-
-    /*pclAligner.getPointCloud("cloud")->downsamplePointCloud(0.04);
-    pclAligner.getPointCloud("row3_cloud")->downsamplePointCloud(0.01);
-    pclAligner.getPointCloud("row4_cloud")->downsamplePointCloud(0.01);
-    pclAligner.getPointCloud("row5_cloud")->downsamplePointCloud(0.01);*/
-
-
-    // Enhance Brightness for the UAV Cloud
-    int brightness = 100;
-    pclAligner.BrightnessEnhancement("cloud", 75);
-    
-    // Visualize
-    PointCloudViz viz;
-    viz.setViewerBackground(255,255,255);
+    // Visualizer
+    PointCloudViz viz("PointCloud_Viewer", 1600, 900);
 
     if( cloud_viz_type.compare("exg") == 0 ){
-        viz.showCloud( pclAligner.getFilteredPcl("row1_cloud"), "row1_cloud" );
-        viz.showCloud( pclAligner.getFilteredPcl("row2_cloud"), "row2_cloud" );
-        viz.showCloud( pclAligner.getFilteredPcl("cloud"), "cloud" );
+        viz.VisualizePointCloud( pclAligner.getFilteredPcl("row1_cloud") );
+        viz.VisualizePointCloud( pclAligner.getFilteredPcl("row2_cloud") );
+        viz.VisualizePointCloud( pclAligner.getFilteredPcl("cloud") );
     } else if ( cloud_viz_type.compare("rgb") == 0 ){
-        viz.showCloud( pclAligner.getPcl("row1_cloud"), "row1_cloud" );
-        viz.showCloud( pclAligner.getPcl("row2_cloud"), "row2_cloud" );
-        viz.showCloud( pclAligner.getPcl("cloud"), "cloud" );
+        viz.VisualizePointCloud( pclAligner.getPcl("row1_cloud") );
+        viz.VisualizePointCloud( pclAligner.getPcl("row2_cloud") );
+        viz.VisualizePointCloud( pclAligner.getPcl("cloud") );
     }
 
-    viz.setViewerPosition(0,0,80,-1,0,0);
     viz.spingUntilDeath();
+
     return 0;
 }

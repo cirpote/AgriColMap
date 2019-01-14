@@ -19,9 +19,9 @@ std::vector<double> vectorFromString(const std::string& str) {
 
 
 void AffineTransformFromString(const std::string& str,
-                                      Eigen::Matrix3f& R,
-                                      Eigen::Vector3f& t,
-                                      Eigen::Vector2f& scale) {
+                                      Eigen::Matrix3d& R,
+                                      Eigen::Vector3d& t,
+                                      Eigen::Vector2d& scale) {
 
     std::vector<float> output;
     std::string offset_cpy = str;
@@ -51,13 +51,13 @@ Vector3 getScaleFromAffineMatrix(const Matrix3& aff){
     return output;
 }
 
-unsigned char computeExGforXYZRGBPoint(const PCLptXYZRGB& pt){
+unsigned char computeExGforXYZRGBPoint(const Vector3d& pt){
 
         float red, blue, green, sum, ExG, sumNorm = 0.f;
-        sum = (int)pt.r  + (int)pt.g  + (int)pt.b;
-        red = (int)pt.r / sum;
-        green = (int)pt.g / sum;
-        blue = (int)pt.b / sum;
+        sum = (int)(pt(0) * 255)  + (int)(pt(1) * 255)  + (int)(pt(2) * 255);
+        red = (int)(pt(0) * 255 ) / sum;
+        green = (int)(pt(1) * 255 ) / sum;
+        blue = (int)(pt(2) * 255 )/ sum;
         sumNorm = blue + green + red;
         ExG = (2 * green - blue - red) * 255.0;
         ExG = std::max(0.f, ExG);

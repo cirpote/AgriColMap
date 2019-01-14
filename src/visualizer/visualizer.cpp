@@ -1,20 +1,42 @@
 #include "visualizer.h"
 
-PointCloudViz::PointCloudViz() {
+PointCloudViz::PointCloudViz(const std::string& win_name,
+                             const int width,
+                             const int height,
+                             const int left,
+                             const int top) {
 
-    viewer = ( new pcl::visualization::PCLVisualizer ("PointCloud Viewer") );
-    viewer->setBackgroundColor (0, 0, 0);
-    viewer->addCoordinateSystem (1.0);
-    viewer->setCameraPosition(0.f, 0.f, 100.f, 0.f, 1.f, 0.f);
+
+    visualizer = std::shared_ptr<open3d::Visualizer>( new open3d::Visualizer() );
+
+    if (!visualizer->CreateVisualizerWindow(win_name, width, height, left, top)){
+        cerr << FRED("[DrawGeometries] Failed creating OpenGL window.\n");
+        return;
+    }
+
+    visualizer->GetRenderOption().ChangePointSize(-5);
+    visualizer->GetRenderOption().show_coordinate_frame_ = true;
+
 }
 
 PointCloudViz::~PointCloudViz(){
     std::cerr << FRED("[PointCloudViz] deleting\n");
-    delete[] viewer;
     std::cerr << BOLD( FRED("[PointCloudViz] deleted\n") );
 }
 
-void PointCloudViz::setViewerPosition(const float &x, const float &y, const float &z,
+void PointCloudViz::VisualizePointCloud(const std::shared_ptr<open3d::PointCloud> pcl){
+
+    for (const auto &geometry_ptr : {pcl}) {
+        if (visualizer->AddGeometry(geometry_ptr) == false) {
+            cerr << FRED("[DrawGeometries] Failed adding geometry.\n");
+            cerr << FRED("[DrawGeometries] Possibly due to bad geometry or wrong geometry type.\n");
+            return;
+        }
+    }
+
+}
+
+/*void PointCloudViz::setViewerPosition(const float &x, const float &y, const float &z,
                                       const float &view_x, const float &view_y, const float &view_z){
     viewer->setCameraPosition(x, y, z, view_x, view_y, view_z);
 }
@@ -46,12 +68,11 @@ void PointCloudViz::showTransparentCloud(const PCLPointCloudXYZRGB::Ptr cloud,
     viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_OPACITY, 0.1, cloud_to_show);
     viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, size, cloud_to_show);
 
-}
+}*/
 
 
 void PointCloudViz::spingUntilDeath(){
 
-    viewer->setSize(1920, 1080);
-    while(!viewer->wasStopped())
-        viewer->spin();
+    visualizer->Run();
+    visualizer->DestroyVisualizerWindow();
 }

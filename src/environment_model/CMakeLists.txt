@@ -1,2 +1,2 @@
 add_library(environment_representation_lib environment_representation.cpp)
-target_link_libraries(environment_representation_lib utils_lib GoICP_lib)
+target_link_libraries(environment_representation_lib utils_lib)

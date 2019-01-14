@@ -29,16 +29,7 @@ corresponding to one match per line.
 #include "ImagePyramid.h"
 #include <unordered_map>
 #include <eigen3/Eigen/Geometry>
-
-#ifdef BUILD_WITH_PCL
-	#include "features/include/pcl/features/fpfh.h"
-	#include "features/include/pcl/features/normal_3d.h"
-	#include "features/include/pcl/features/fpfh_omp.h"
-#else
-	#include <pcl/features/fpfh.h>
-	#include <pcl/features/normal_3d.h>
-	#include <pcl/features/fpfh_omp.h>
-#endif
+#include "../include/uav_ugv_collaboration_module/defs.h"
 
 class CPM
 {
@@ -69,8 +60,8 @@ private:
 	void UpdateSearchRadius(IntImage& neighbors, FImage* pydSeedsFlow, int level, float* outRadius);
 
     // Creating Pcl from cv::Mat
-    void CreateXYZCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, const cv::Mat& orgCloud, cv::Mat& indexes);
-    void NormalsAndFPFHEstimation(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::PointCloud<pcl::Normal>::Ptr& normals, pcl::PointCloud<pcl::FPFHSignature33>::Ptr fpfh, const float& ratio);
+    void CreateXYZCloud(std::shared_ptr<open3d::PointCloud> cloud, const cv::Mat& orgCloud, cv::Mat& indexes);
+    std::shared_ptr<open3d::Feature> NormalsAndFPFHEstimation(std::shared_ptr<open3d::PointCloud> cloud, const float& ratio);
 
 	// minimum circle
 	struct Point{
