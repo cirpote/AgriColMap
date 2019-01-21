@@ -25,11 +25,11 @@ make -j8
 ### Tutorial ###
 
 In this tutorial, we briefly show how to use the AgriColMap to register 3D maps gathered by aerial and ground robots.
-The files you need to download are:
+The files you need to download are in the folder:
 
-- https://drive.google.com/a/diag.uniroma1.it/uc?id=1Bc1u1LZ8fGGhN1UyBvyJS-OGJt4XzMUS&export=download (Soybean Dataset)
+- https://drive.google.com/drive/u/1/folders/1wfVrImcOHHK8Xuowq78pmlNFd23BR5Jn
 
-Uncompress the downloaded file into: ${PATH_TO_AGRICOLMAP}/maps/. The "Soybean Dataset" contains UAV and UGV datasets registered in a soybean farm. Other datasets are freely available on [Sapienza Collaborative Mapping Datasets](http://www.dis.uniroma1.it/~labrococo/fsd/collaborativemapping.html).
+Download the Soybean datasets. Uncompress the downloaded file into: ${PATH_TO_AGRICOLMAP}/maps/. The "Soybean Dataset" contains UAV and UGV datasets registered in a soybean farm. Other datasets are freely available on [Sapienza Collaborative Mapping Datasets](http://www.dis.uniroma1.it/~labrococo/fsd/collaborativemapping.html).
 
 ```bash
 cd bin
