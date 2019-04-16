@@ -77,12 +77,14 @@ AgriColMap is distributed in the hope that it will be useful, but WITHOUT ANY WA
 Please cite the [following paper](https://arxiv.org/abs/1810.00457) when using AgriColMap for your research:
 
 ```bibtex
-@article{pknnp_arxiv2018,
-  title={{A}gri{C}ol{M}ap: {A}erial-Ground Collaborative {3D} Mapping
-         for Precision Farming},
-  author={Potena, Ciro and Khanna, Raghav and Nieto, Juan and
-          Siegwart, Roland and Nardi, Daniele and Pretto, Alberto},
-  journal={arXiv:1810.00457},
+@article{pknsnp_RA-L2019,
+  title={{A}gri{C}ol{M}ap: {A}erial-Ground Collaborative {3D} Mapping for Precision Farming},
+  author={Potena, Ciro and Khanna, Raghav and Nieto, Juan and Siegwart, Roland and Nardi, Daniele and Pretto, Alberto},
+  journal={IEEE Robotics and Automation Letters},
+  volume = {4},
+  number = {2},
   year={2018}
+  pages = {1085--1092},
+  doi={10.1109/LRA.2019.2894468}
 }
 ```
