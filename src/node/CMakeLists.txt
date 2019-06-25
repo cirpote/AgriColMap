@@ -10,6 +10,6 @@ target_link_libraries(visualization_node_sugarbeet_10m pointcloud_aligner_lib ya
 add_executable(visualization_node_ww visualization_node_ww.cpp)
 target_link_libraries(visualization_node_ww pointcloud_aligner_lib yaml-cpp visualizer_lib)
 
-add_executable(registration_node registration_node.cpp)
+add_executable(registration_node registration_node.cpp pix4d_input_reader.cpp)
 target_link_libraries(registration_node pointcloud_aligner_lib yaml-cpp visualizer_lib)
 
