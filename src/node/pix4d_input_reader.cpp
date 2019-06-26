@@ -3,10 +3,7 @@
 using namespace std;
 
 pix4dInputReader::pix4dInputReader(string& input_file) : instream_( new ifstream(input_file) ),
-                                                         strstream_( new istringstream() ), 
-                                                         nirParams(CameraParams()), greParams(CameraParams()),
-                                                         redParams(CameraParams()), regParams(CameraParams())
- {
+                                                         strstream_( new istringstream() ) {
 
     if(!(*instream_))
         ExitWithErrorMsg("File Does Not Exist: " + input_file);
@@ -23,17 +20,16 @@ int pix4dInputReader::getCalibDataSize(){
 
 void pix4dInputReader::readParamFile(){
 
-   while ( getline( *instream_, curr_line_) ){
+   while ( getline( *instream_, curr_line_)){
         CalibCamParams params;
-        if(getImgsAndSize(params)){
+        if(getImgsAndSize(params, "IMG_")){
             getK(params);
             getDistCoeffs(params);
             getCamPose(params);
             pix4dCalibData_->insert( pair<string, CalibCamParams>(params.rgb_img, params) );
         }
    }
-
-
+    instream_->close();
 }
 
 void pix4dInputReader::printParams(int& id){
@@ -43,14 +39,6 @@ void pix4dInputReader::printParams(int& id){
         if(index == id){
             cout << "Printing Calib Data for Image: " << *it << "\n\n";
             pix4dCalibData_->at( *it ).print();
-            cout << "\nPrinting nirParams: \n\n";
-            nirParams.print();
-            cout << "\nPrinting greParams: \n\n";
-            greParams.print();
-            cout << "\nPrinting redParams: \n\n";
-            redParams.print();
-            cout << "\nPrinting regParams: \n\n";
-            regParams.print();
             return;
         }      
         index++;
@@ -58,13 +46,53 @@ void pix4dInputReader::printParams(int& id){
     cerr << "element with ID: " << id << "not found\n\n";
 }
 
+void pix4dInputReader::printMultiSpectralParams(){
+    cout << "\n" << nirParams_.rgb_img << " Params: \n\n";
+    nirParams_.print();
+    cout << "\n" << greParams_.rgb_img << " Params: \n\n";
+    greParams_.print();
+    cout << "\n" << redParams_.rgb_img << " Params: \n\n";
+    redParams_.print();
+    cout << "\n" << regParams_.rgb_img << " Params: \n\n";
+    regParams_.print();
+}
+
 void pix4dInputReader::printParams(string& key){
     pix4dCalibData_->at(key).print();
 }
 
-bool pix4dInputReader::getImgsAndSize(CalibCamParams& params){
+void pix4dInputReader::readParamFileMultiSpectral(string& str){
 
-    if( !curr_line_.find("IMG_") ){
+    instream_->open(str);
+    getline( *instream_, curr_line_);
+    getImgsAndSize(nirParams_, "NIR");
+    getK(nirParams_);
+    getDistCoeffs(nirParams_);
+    getCamPose(nirParams_);
+
+    getline( *instream_, curr_line_);
+    getImgsAndSize(redParams_, "RED");
+    getK(redParams_);
+    getDistCoeffs(redParams_);
+    getCamPose(redParams_);
+
+    getline( *instream_, curr_line_);
+    getImgsAndSize(regParams_, "REG");
+    getK(regParams_);
+    getDistCoeffs(regParams_);
+    getCamPose(regParams_);
+
+    getline( *instream_, curr_line_);
+    getImgsAndSize(greParams_, "GRE");
+    getK(greParams_);
+    getDistCoeffs(greParams_);
+    getCamPose(greParams_);
+    instream_->close();
+}
+
+bool pix4dInputReader::getImgsAndSize(CalibCamParams& params, const char* str){
+
+    if( !curr_line_.find(str) ){
             vector<string> line_chunks; 
             split(curr_line_, line_chunks, ' ');
 
@@ -90,11 +118,11 @@ bool pix4dInputReader::getImgsAndSize(CalibCamParams& params){
             params.nir_img[27] = 'T'; params.nir_img[28] = 'I'; params.nir_img[29] = 'F'; params.nir_img[30] = '\0'; 
 
             strstream_->str(line_chunks[1]);
-            *strstream_ >> params.rgbParams.img_width;
+            *strstream_ >> params.img_width;
             strstream_->clear();
 
             strstream_->str(line_chunks[2]);
-            *strstream_ >> params.rgbParams.img_height;
+            *strstream_ >> params.img_height;
             strstream_->clear();  
 
             return true;
@@ -107,23 +135,23 @@ void pix4dInputReader::getK(CalibCamParams& params){
 
     getline(*instream_, curr_line_);
     strstream_->str(curr_line_);
-    *strstream_ >> params.rgbParams.K(0,0);
-    *strstream_ >> params.rgbParams.K(0,1);
-    *strstream_ >> params.rgbParams.K(0,2);
+    *strstream_ >> params.K(0,0);
+    *strstream_ >> params.K(0,1);
+    *strstream_ >> params.K(0,2);
     strstream_->clear();
 
     std::getline(*instream_, curr_line_);
     strstream_->str(curr_line_);
-    *strstream_ >> params.rgbParams.K(1,0);
-    *strstream_ >> params.rgbParams.K(1,1);
-    *strstream_ >> params.rgbParams.K(1,2);
+    *strstream_ >> params.K(1,0);
+    *strstream_ >> params.K(1,1);
+    *strstream_ >> params.K(1,2);
     strstream_->clear();
 
     std::getline(*instream_, curr_line_);
     strstream_->str(curr_line_);
-    *strstream_ >> params.rgbParams.K(2,0);
-    *strstream_ >> params.rgbParams.K(2,1);
-    *strstream_ >> params.rgbParams.K(2,2);
+    *strstream_ >> params.K(2,0);
+    *strstream_ >> params.K(2,1);
+    *strstream_ >> params.K(2,2);
     strstream_->clear();
 
 }
@@ -132,15 +160,15 @@ void pix4dInputReader::getDistCoeffs(CalibCamParams& params){
 
     getline(*instream_, curr_line_);
     strstream_->str(curr_line_);
-    *strstream_ >> params.rgbParams.r_dist_coeffs(0);
-    *strstream_ >> params.rgbParams.r_dist_coeffs(1);
-    *strstream_ >> params.rgbParams.r_dist_coeffs(2);
+    *strstream_ >> params.r_dist_coeffs(0);
+    *strstream_ >> params.r_dist_coeffs(1);
+    *strstream_ >> params.r_dist_coeffs(2);
     strstream_->clear();
 
     std::getline(*instream_, curr_line_);
     strstream_->str(curr_line_);
-    *strstream_ >> params.rgbParams.t_dist_coeffs(0);
-    *strstream_ >> params.rgbParams.t_dist_coeffs(1);
+    *strstream_ >> params.t_dist_coeffs(0);
+    *strstream_ >> params.t_dist_coeffs(1);
     strstream_->clear();
 
 }
@@ -149,30 +177,30 @@ void pix4dInputReader::getCamPose(CalibCamParams& params){
 
     getline(*instream_, curr_line_);
     strstream_->str(curr_line_);
-    *strstream_ >> params.rgbParams.cam_t(0);
-    *strstream_ >> params.rgbParams.cam_t(1);
-    *strstream_ >> params.rgbParams.cam_t(2);
+    *strstream_ >> params.cam_t(0);
+    *strstream_ >> params.cam_t(1);
+    *strstream_ >> params.cam_t(2);
     strstream_->clear();
 
     getline(*instream_, curr_line_);
     strstream_->str(curr_line_);
-    *strstream_ >> params.rgbParams.cam_R(0,0);
-    *strstream_ >> params.rgbParams.cam_R(0,1);
-    *strstream_ >> params.rgbParams.cam_R(0,2);
+    *strstream_ >> params.cam_R(0,0);
+    *strstream_ >> params.cam_R(0,1);
+    *strstream_ >> params.cam_R(0,2);
     strstream_->clear();
 
     getline(*instream_, curr_line_);
     strstream_->str(curr_line_);
-    *strstream_ >> params.rgbParams.cam_R(1,0);
-    *strstream_ >> params.rgbParams.cam_R(1,1);
-    *strstream_ >> params.rgbParams.cam_R(1,2);
+    *strstream_ >> params.cam_R(1,0);
+    *strstream_ >> params.cam_R(1,1);
+    *strstream_ >> params.cam_R(1,2);
     strstream_->clear();
 
     getline(*instream_, curr_line_);
     strstream_->str(curr_line_);
-    *strstream_ >> params.rgbParams.cam_R(2,0);
-    *strstream_ >> params.rgbParams.cam_R(2,1);
-    *strstream_ >> params.rgbParams.cam_R(2,2);
+    *strstream_ >> params.cam_R(2,0);
+    *strstream_ >> params.cam_R(2,1);
+    *strstream_ >> params.cam_R(2,2);
     strstream_->clear();
 
 }
