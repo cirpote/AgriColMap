@@ -30,23 +30,14 @@ struct CameraParams{
 struct CalibCamParams{
 
     char rgb_img[50], reg_img[50], gre_img[50], red_img[50], nir_img[50];
-    CameraParams rgbParams, nirParams, greParams, redParams, regParams;
+    CameraParams rgbParams;
 
-    CalibCamParams() : rgbParams(CameraParams()), nirParams(CameraParams()), greParams(CameraParams()),
-                       redParams(CameraParams()), regParams(CameraParams()) {};
+    CalibCamParams() : rgbParams(CameraParams()) {};
     
     void print(){
         cout << rgb_img << "\n";
         cout << "\nPrinting rgbParams: \n\n";
         rgbParams.print();
-        cout << "\nPrinting nirParams: \n\n";
-        nirParams.print();
-        cout << "\nPrinting greParams: \n\n";
-        greParams.print();
-        cout << "\nPrinting redParams: \n\n";
-        redParams.print();
-        cout << "\nPrinting regParams: \n\n";
-        regParams.print();
     }
 };
 
@@ -80,5 +71,6 @@ class pix4dInputReader{
         unordered_map<string, CalibCamParams>* pix4dCalibData_;
         string curr_line_;
         list<string> imgs_;
+        CameraParams nirParams, greParams, redParams, regParams;
 
 };

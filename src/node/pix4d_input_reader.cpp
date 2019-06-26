@@ -3,7 +3,10 @@
 using namespace std;
 
 pix4dInputReader::pix4dInputReader(string& input_file) : instream_( new ifstream(input_file) ),
-                                                         strstream_( new istringstream() ) {
+                                                         strstream_( new istringstream() ), 
+                                                         nirParams(CameraParams()), greParams(CameraParams()),
+                                                         redParams(CameraParams()), regParams(CameraParams())
+ {
 
     if(!(*instream_))
         ExitWithErrorMsg("File Does Not Exist: " + input_file);
@@ -14,7 +17,7 @@ pix4dInputReader::pix4dInputReader(string& input_file) : instream_( new ifstream
 pix4dInputReader::~pix4dInputReader() {}
 
 int pix4dInputReader::getCalibDataSize(){
-    
+
     return pix4dCalibData_->size();
 }
 
@@ -40,6 +43,14 @@ void pix4dInputReader::printParams(int& id){
         if(index == id){
             cout << "Printing Calib Data for Image: " << *it << "\n\n";
             pix4dCalibData_->at( *it ).print();
+            cout << "\nPrinting nirParams: \n\n";
+            nirParams.print();
+            cout << "\nPrinting greParams: \n\n";
+            greParams.print();
+            cout << "\nPrinting redParams: \n\n";
+            redParams.print();
+            cout << "\nPrinting regParams: \n\n";
+            regParams.print();
             return;
         }      
         index++;
