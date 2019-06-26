@@ -13,6 +13,11 @@ pix4dInputReader::pix4dInputReader(string& input_file) : instream_( new ifstream
 
 pix4dInputReader::~pix4dInputReader() {}
 
+int pix4dInputReader::getCalibDataSize(){
+    
+    return pix4dCalibData_->size();
+}
+
 void pix4dInputReader::readParamFile(){
 
    while ( getline( *instream_, curr_line_) ){
@@ -74,11 +79,11 @@ bool pix4dInputReader::getImgsAndSize(CalibCamParams& params){
             params.nir_img[27] = 'T'; params.nir_img[28] = 'I'; params.nir_img[29] = 'F'; params.nir_img[30] = '\0'; 
 
             strstream_->str(line_chunks[1]);
-            *strstream_ >> params.img_width;
+            *strstream_ >> params.rgbParams.img_width;
             strstream_->clear();
 
             strstream_->str(line_chunks[2]);
-            *strstream_ >> params.img_height;
+            *strstream_ >> params.rgbParams.img_height;
             strstream_->clear();  
 
             return true;
@@ -91,23 +96,23 @@ void pix4dInputReader::getK(CalibCamParams& params){
 
     getline(*instream_, curr_line_);
     strstream_->str(curr_line_);
-    *strstream_ >> params.K(0,0);
-    *strstream_ >> params.K(0,1);
-    *strstream_ >> params.K(0,2);
+    *strstream_ >> params.rgbParams.K(0,0);
+    *strstream_ >> params.rgbParams.K(0,1);
+    *strstream_ >> params.rgbParams.K(0,2);
     strstream_->clear();
 
     std::getline(*instream_, curr_line_);
     strstream_->str(curr_line_);
-    *strstream_ >> params.K(1,0);
-    *strstream_ >> params.K(1,1);
-    *strstream_ >> params.K(1,2);
+    *strstream_ >> params.rgbParams.K(1,0);
+    *strstream_ >> params.rgbParams.K(1,1);
+    *strstream_ >> params.rgbParams.K(1,2);
     strstream_->clear();
 
     std::getline(*instream_, curr_line_);
     strstream_->str(curr_line_);
-    *strstream_ >> params.K(2,0);
-    *strstream_ >> params.K(2,1);
-    *strstream_ >> params.K(2,2);
+    *strstream_ >> params.rgbParams.K(2,0);
+    *strstream_ >> params.rgbParams.K(2,1);
+    *strstream_ >> params.rgbParams.K(2,2);
     strstream_->clear();
 
 }
@@ -116,15 +121,15 @@ void pix4dInputReader::getDistCoeffs(CalibCamParams& params){
 
     getline(*instream_, curr_line_);
     strstream_->str(curr_line_);
-    *strstream_ >> params.r_dist_coeffs(0);
-    *strstream_ >> params.r_dist_coeffs(1);
-    *strstream_ >> params.r_dist_coeffs(2);
+    *strstream_ >> params.rgbParams.r_dist_coeffs(0);
+    *strstream_ >> params.rgbParams.r_dist_coeffs(1);
+    *strstream_ >> params.rgbParams.r_dist_coeffs(2);
     strstream_->clear();
 
     std::getline(*instream_, curr_line_);
     strstream_->str(curr_line_);
-    *strstream_ >> params.t_dist_coeffs(0);
-    *strstream_ >> params.t_dist_coeffs(1);
+    *strstream_ >> params.rgbParams.t_dist_coeffs(0);
+    *strstream_ >> params.rgbParams.t_dist_coeffs(1);
     strstream_->clear();
 
 }
@@ -133,30 +138,30 @@ void pix4dInputReader::getCamPose(CalibCamParams& params){
 
     getline(*instream_, curr_line_);
     strstream_->str(curr_line_);
-    *strstream_ >> params.cam_t(0);
-    *strstream_ >> params.cam_t(1);
-    *strstream_ >> params.cam_t(2);
+    *strstream_ >> params.rgbParams.cam_t(0);
+    *strstream_ >> params.rgbParams.cam_t(1);
+    *strstream_ >> params.rgbParams.cam_t(2);
     strstream_->clear();
 
     getline(*instream_, curr_line_);
     strstream_->str(curr_line_);
-    *strstream_ >> params.cam_R(0,0);
-    *strstream_ >> params.cam_R(0,1);
-    *strstream_ >> params.cam_R(0,2);
+    *strstream_ >> params.rgbParams.cam_R(0,0);
+    *strstream_ >> params.rgbParams.cam_R(0,1);
+    *strstream_ >> params.rgbParams.cam_R(0,2);
     strstream_->clear();
 
     getline(*instream_, curr_line_);
     strstream_->str(curr_line_);
-    *strstream_ >> params.cam_R(1,0);
-    *strstream_ >> params.cam_R(1,1);
-    *strstream_ >> params.cam_R(1,2);
+    *strstream_ >> params.rgbParams.cam_R(1,0);
+    *strstream_ >> params.rgbParams.cam_R(1,1);
+    *strstream_ >> params.rgbParams.cam_R(1,2);
     strstream_->clear();
 
     getline(*instream_, curr_line_);
     strstream_->str(curr_line_);
-    *strstream_ >> params.cam_R(2,0);
-    *strstream_ >> params.cam_R(2,1);
-    *strstream_ >> params.cam_R(2,2);
+    *strstream_ >> params.rgbParams.cam_R(2,0);
+    *strstream_ >> params.rgbParams.cam_R(2,1);
+    *strstream_ >> params.rgbParams.cam_R(2,2);
     strstream_->clear();
 
 }
