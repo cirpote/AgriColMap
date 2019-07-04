@@ -72,6 +72,7 @@ class pix4dInputReader{
         void printMultiSpectralParams();
         void printStereoParams();
         int getCalibDataSize();
+        CalibCamParams getCalibData(int& id);
 
         void readParamFileMultiSpectral(string& nir_str, 
                                         string& gre_str, 

@@ -38,17 +38,44 @@ int main(int argc, char **argv) {
                                  input_calibcanparams_str_gre_reg,
                                  input_calibcanparams_str_gre_rgb);
 
-    string ciao = "IMG_190522_085454_0024_RGB.JPG";
-    int ciao1 = 0;
-    pix4dReader.printParams(ciao1);
+    //string ciao = "IMG_190522_085454_0024_RGB.JPG";
+    //int ciao1 = 0;
+    //pix4dReader.printParams(ciao1);
 
     /*pix4dReader.printMultiSpectralParams();
-    pix4dReader.printStereoParams();
+    pix4dReader.printStereoParams();*/
 
     std::shared_ptr<open3d::PointCloud> cloud_ptr ( new open3d::PointCloud() );
     if (!ReadPointCloud(input_pcl_str, *cloud_ptr)) 
-        cerr << FGRN("Failed to read: ") << input_pcl_str << "\n";*/
+        cerr << FGRN("Failed to read: ") << input_pcl_str << "\n";
     
+    int id_prova = 91;
+    pix4dReader.printParams(id_prova);
+    CalibCamParams&& CalibData = pix4dReader.getCalibData(id_prova);
+
+    cv::Mat output_img( cv::Size(CalibData.img_width, CalibData.img_height), CV_8UC3, cv::Scalar(0,0,0) );
+
+    for( unsigned int iter = 0; iter < cloud_ptr->points_.size(); ++iter){
+        
+        Eigen::Vector3d& pt = cloud_ptr->points_[iter]; 
+        Eigen::Vector3d& pt_color = cloud_ptr->colors_[iter];
+        Eigen::Vector3d cam_pt = CalibData.cam_R.transpose()*( pt - CalibData.cam_t );
+        //std::cout << cam_pt.transpose() << "\n";
+        Eigen::Vector2d uv_pt;
+
+        uv_pt(0) = -cam_pt(0)/cam_pt(2)*CalibData.K(0,0) + CalibData.K(0,2);
+        uv_pt(1) = -cam_pt(1)/cam_pt(2)*CalibData.K(1,1) + CalibData.K(1,2);
+
+        if( uv_pt(0) > 0 && uv_pt(0) < CalibData.img_width && uv_pt(1) > 0 && uv_pt(1) < CalibData.img_height ){
+            //cout << pt_color.transpose() * 255 << "\n";
+            output_img.at<cv::Vec3b>( uv_pt(0), uv_pt(1) )[0] = pt_color(0)*255.f;
+            output_img.at<cv::Vec3b>( uv_pt(0), uv_pt(1) )[1] = pt_color(1)*255.f;
+            output_img.at<cv::Vec3b>( uv_pt(0), uv_pt(1) )[2] = pt_color(2)*255.f;
+        }
+
+    }
+
+    cv::imwrite("/home/ciro/AgriColMap/output.jpg", output_img);
 
 
     return 0;

@@ -18,6 +18,16 @@ int pix4dInputReader::getCalibDataSize(){
     return pix4dCalibData_.size();
 }
 
+CalibCamParams pix4dInputReader::getCalibData(int& id){
+    int index = 0;
+    for ( list< string >::iterator it = imgs_.begin(); it != imgs_.end(); ++it ){
+        if(index == id)
+            return pix4dCalibData_.at( *it ); 
+        index++;
+    }
+    cout << "ID: " << id << " Does not exist!" << "\n\n";
+}
+
 void pix4dInputReader::readParamFile(){
 
    while ( getline( *instream_, curr_line_)){
@@ -86,6 +96,7 @@ void pix4dInputReader::getSize(MultiSpectralCalibParams& params){
 }
 
 void pix4dInputReader::readExtCamCalibParams(string& ext_params_str){
+
     instream_->open(ext_params_str);
     getline( *instream_, curr_line_);
     while(getline( *instream_, curr_line_)){
@@ -110,8 +121,6 @@ void pix4dInputReader::readExtCamCalibParams(string& ext_params_str){
         strstream_->str(line_chunks[6]);
         *strstream_ >> curr_ext_Tf(5);  
         strstream_->clear(); 
-        std::cout << line_chunks[0] << " " << line_chunks[1] << " " << line_chunks[2] << "\n";
-
     }
     instream_->close();
 }
