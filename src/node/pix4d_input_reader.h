@@ -42,17 +42,21 @@ struct CalibCamParams{
     Eigen::Vector3d r_dist_coeffs;
     Eigen::Vector2d t_dist_coeffs;
     Eigen::Vector3d cam_t;
+    Eigen::Matrix<double,6,1> external_cam_T; 
     Eigen::Matrix3d cam_R;
 
     CalibCamParams() : K(Eigen::Matrix3d::Identity()), img_width(0), img_height(0), r_dist_coeffs(Eigen::Vector3d::Zero()), 
-                       t_dist_coeffs(Eigen::Vector2d::Zero()), cam_t(Eigen::Vector3d::Zero()), cam_R(Eigen::Matrix3d::Identity()) {};
+                       t_dist_coeffs(Eigen::Vector2d::Zero()), cam_t(Eigen::Vector3d::Zero()), cam_R(Eigen::Matrix3d::Identity()),
+                       external_cam_T( Eigen::Matrix<double,6,1>::Zero() ) {};
     
     void print(){
+        cout.precision(10);
         cout << "Image size: " << img_width << " " << img_height << "\n\n";
         cout << "Calibration Matrix:\n" << K << "\n\n";
         cout << "Distorsion Coefficients:\n" << r_dist_coeffs.transpose() << " " << t_dist_coeffs.transpose() <<  "\n\n";
         cout << "Camera Position:\n" << cam_t.transpose() << "\n\n";
         cout << "Camera Rotation Matrix:\n" << cam_R << "\n\n";
+        cout << "Camera External Parameters:\n" << external_cam_T.transpose() << "\n\n";
     }
 };
 
@@ -78,6 +82,8 @@ class pix4dInputReader{
                               string& gre_red_str, 
                               string& gre_reg_str, 
                               string& gre_rgb_str);
+
+        void readExtCamCalibParams(string& ext_params_str);
 
     private:
         bool getImgsAndSize(CalibCamParams& params, const char* str);

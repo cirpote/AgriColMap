@@ -6,7 +6,11 @@ using namespace std;
 
 int main(int argc, char **argv) {
     // Pix4d Calib Parameters
-    string input_calibcanparams_str = _package_path + "/src/node/" + "22may_jesi_rgb_calibrated_camera_parameters" + ".txt";
+    string input_calibcanparams_str = _package_path + "/src/node/08may2019_jesi_bis/1_initial/params/" + "08may2019_jesi_bis_calibrated_camera_parameters" + ".txt";
+    string input_extcalibcanparams_str = _package_path + "/src/node/08may2019_jesi_bis/1_initial/params/" + "08may2019_jesi_bis_calibrated_external_camera_parameters" + ".txt";
+
+    // Pix4d output PointCloud 
+    string input_pcl_str = _package_path + "/src/node/08may2019_jesi_bis/2_densification/point_cloud/08may2019_jesi_bis_group1_densified_point_cloud.ply";
 
     // Multispectral Calib Parameters
     string input_calibcanparams_str_nir = _package_path + "/src/node/" + "nir_calib" + ".txt";
@@ -22,6 +26,7 @@ int main(int argc, char **argv) {
 
     pix4dInputReader pix4dReader(input_calibcanparams_str);
     pix4dReader.readParamFile();
+    pix4dReader.readExtCamCalibParams(input_extcalibcanparams_str);
 
     pix4dReader.readParamFileMultiSpectral(input_calibcanparams_str_nir,
                                            input_calibcanparams_str_gre,
@@ -37,8 +42,14 @@ int main(int argc, char **argv) {
     int ciao1 = 0;
     pix4dReader.printParams(ciao1);
 
-    pix4dReader.printMultiSpectralParams();
+    /*pix4dReader.printMultiSpectralParams();
     pix4dReader.printStereoParams();
+
+    std::shared_ptr<open3d::PointCloud> cloud_ptr ( new open3d::PointCloud() );
+    if (!ReadPointCloud(input_pcl_str, *cloud_ptr)) 
+        cerr << FGRN("Failed to read: ") << input_pcl_str << "\n";*/
+    
+
 
     return 0;
 }

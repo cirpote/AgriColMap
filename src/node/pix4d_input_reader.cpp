@@ -85,6 +85,37 @@ void pix4dInputReader::getSize(MultiSpectralCalibParams& params){
     strstream_->clear(); 
 }
 
+void pix4dInputReader::readExtCamCalibParams(string& ext_params_str){
+    instream_->open(ext_params_str);
+    getline( *instream_, curr_line_);
+    while(getline( *instream_, curr_line_)){
+        vector<string> line_chunks; 
+        split(curr_line_, line_chunks, ' ');
+        Eigen::Matrix<double,6,1>& curr_ext_Tf = pix4dCalibData_.at(line_chunks[0]).external_cam_T; 
+        strstream_->str(line_chunks[1]);
+        *strstream_ >> curr_ext_Tf(0);
+        strstream_->clear();
+        strstream_->str(line_chunks[2]);
+        *strstream_ >> curr_ext_Tf(1);
+        strstream_->clear();
+        strstream_->str(line_chunks[3]);
+        *strstream_ >> curr_ext_Tf(2);
+        strstream_->clear();
+        strstream_->str(line_chunks[4]);
+        *strstream_ >> curr_ext_Tf(3);
+        strstream_->clear();
+        strstream_->str(line_chunks[5]);
+        *strstream_ >> curr_ext_Tf(4);
+        strstream_->clear();
+        strstream_->str(line_chunks[6]);
+        *strstream_ >> curr_ext_Tf(5);  
+        strstream_->clear(); 
+        std::cout << line_chunks[0] << " " << line_chunks[1] << " " << line_chunks[2] << "\n";
+
+    }
+    instream_->close();
+}
+
 void pix4dInputReader::readStereoParams(string& gre_nir_str, 
                                         string& gre_red_str, 
                                         string& gre_reg_str, 
