@@ -1,6 +1,6 @@
 #include "defs.h"
 
-/*namespace instances {
+namespace instances {
 
     PCLPointCloudXYZRGB::Ptr pclxyzrgb_instance( new PCLPointCloudXYZRGB() );
     PCLPointCloudXYZ::Ptr pclxyz_instance( new PCLPointCloudXYZ() );
@@ -14,4 +14,4 @@
     KDTreeXYZvector kdtree_xyz_instance(1);
     KDTreeXY* kdtree_xy_ptr_instance = new KDTreeXY(kdtree_xy_instance, 0.1);
     KDTreeXYZ* kdtree_xyz_ptr_instance = new KDTreeXYZ(kdtree_xyz_instance, 0.1);
-}*/
+}

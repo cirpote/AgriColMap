@@ -2,13 +2,8 @@
 
 using namespace std;
 
-PointCloudAligner::PointCloudAligner() : _R(Matrix3d::Identity()),_t(Vector3d::Zero()) {}
-
-void PointCloudAligner::computeExGFilteredPointCloud(const string& cloud_key, const Vector3i& cloud_color){
-
-    ExGFilterPCL(cloud_key, cloud_color);
-    return;
-}
+PointCloudAligner::PointCloudAligner() : _R(Matrix3::Identity()),
+                                               _t(Vector3::Zero()) {}
 
 void PointCloudAligner::computeAndApplyInitialRelativeGuess(const std::string& fixed_cloud_key,
                                                             const std::string& moving_cloud_key){
@@ -23,7 +18,7 @@ void PointCloudAligner::computeAndApplyInitialRelativeGuess(const std::string& f
         Vector3d diff_t( initGuessTMap[moving_cloud_key] - initGuessTMap[fixed_cloud_key] );
                     //getPointCloud(moving_cloud_key)->getInitGuessT() - getPointCloud(fixed_cloud_key)->getInitGuessT() );
         _initTfMap.emplace(moving_cloud_key, boost::shared_ptr<Transform>(new Transform(Transform::Identity())) );
-        _initTfMap[moving_cloud_key]->translation() << diff_t.cast<double>();
+        _initTfMap[moving_cloud_key]->translation() << diff_t.cast<float>();
 
         _init_mov_scale(0) *= _scaleNoise(0);
         _init_mov_scale(1) *= _scaleNoise(1);
@@ -38,6 +33,12 @@ void PointCloudAligner::computeAndApplyInitialRelativeGuess(const std::string& f
 
 }
 
+void PointCloudAligner::computeExGFilteredPointCloud(const string& cloud_key, const Vector3i& cloud_color){
+
+    ExGFilterPCL(cloud_key, cloud_color);
+    return;
+}
+
 void PointCloudAligner::computeEnvironmentalModels(const string& mov_cloud_key, const string& fix_cloud_key){
 
 
@@ -49,6 +50,12 @@ void PointCloudAligner::computeEnvironmentalModels(const string& mov_cloud_key, 
     ERMap[fix_cloud_key]->loadFromPCLcloud( pclMap[fix_cloud_key], 0.02, _initTfMap[mov_cloud_key]->translation().head(2) );
     ERMap[fix_cloud_key]->computeMMGridMap();
 
+    return;
+}
+
+void PointCloudAligner::downsaplePointCloud(const string &cloud_key, const float &rate){
+
+    downsamplePCL(cloud_key, rate);
     return;
 }
 
@@ -200,11 +207,11 @@ void PointCloudAligner::computeAndApplyDOFTransform(const std::string& cloud1_na
         if(counter == len)
             break;
 
-        mov_pts.push_back( Vector3d ( movingXYZImg.at<cv::Vec3f>(filteredMatches[4*counter + 3], filteredMatches[4*counter + 2])[0],
+        mov_pts.push_back( Vector3 ( movingXYZImg.at<cv::Vec3f>(filteredMatches[4*counter + 3], filteredMatches[4*counter + 2])[0],
                                      movingXYZImg.at<cv::Vec3f>(filteredMatches[4*counter + 3], filteredMatches[4*counter + 2])[1],
                                      movingXYZImg.at<cv::Vec3f>(filteredMatches[4*counter + 3], filteredMatches[4*counter + 2])[2]) );
 
-        fix_pts.push_back( Vector3d ( fixedXYZImg.at<cv::Vec3f>(filteredMatches[4*counter + 1], filteredMatches[4*counter + 0])[0],
+        fix_pts.push_back( Vector3 ( fixedXYZImg.at<cv::Vec3f>(filteredMatches[4*counter + 1], filteredMatches[4*counter + 0])[0],
                                      fixedXYZImg.at<cv::Vec3f>(filteredMatches[4*counter + 1], filteredMatches[4*counter + 0])[1],
                                      fixedXYZImg.at<cv::Vec3f>(filteredMatches[4*counter + 1], filteredMatches[4*counter + 0])[2] ) );
 
@@ -222,35 +229,35 @@ void PointCloudAligner::computeAndApplyDOFTransform(const std::string& cloud1_na
     cerr << FGRN("Initial Alignment Translation Vector") << "\n";
     cerr << result.translation.transpose() << "\n" << "\n";
 
-    Eigen::Matrix3d R = result.transform.cast <double> ();
-    Eigen::Vector3d t = result.translation.cast <double> ();
+    Eigen::Matrix3f R = result.transform.cast <float> ();
+    Eigen::Vector3f t = result.translation.cast <float> ();
 
     _R = R; _t = t;
-    Matrix4 LDOF_tf = Matrix4::Identity();
-    LDOF_tf.block<3,1>(0,3) = _t;
-    LDOF_tf.block<3,3>(0,0) = _R;
-    transformPointCloud(LDOF_tf, cloud2_name, "rgb");
-    transformPointCloud(LDOF_tf, cloud2_name, "exg");
+    Transform LDOF_tf = Transform::Identity();
+    LDOF_tf.translation() = _t;
+    LDOF_tf.linear() = _R;
+    pcl::transformPointCloud(*pclMap[cloud2_name], *pclMap[cloud2_name], LDOF_tf);
+    pcl::transformPointCloud(*pclMapFiltered[cloud2_name], *pclMapFiltered[cloud2_name], LDOF_tf);
 }
 
 void PointCloudAligner::GroundTruthTransformPointCloud(const string &cloud_key){
 
-    Matrix4 gtTF;
-    gtTF.block<3,1>(0,3) = GTtfMap[cloud_key]->_tgt;
-    gtTF.block<3,3>(0,0) = GTtfMap[cloud_key]->_Rgt;
-    transformPointCloud( gtTF, cloud_key, "rgb" );
+    Transform gtTF;
+    gtTF.translation() = GTtfMap[cloud_key]->_tgt;
+    gtTF.linear() = GTtfMap[cloud_key]->_Rgt;
+    pcl::transformPointCloud( *pclMap[cloud_key], *pclMap[cloud_key], gtTF );
 }
 
 void PointCloudAligner::finalRefinement(const string &cloud1_name, const string &cloud2_name){
 
-    KDTreeXYZvector kdTreeXYZ_points( pclMapFilteredDownSampled[cloud1_name]->points_.size() );
+    KDTreeXYZvector kdTreeXYZ_points( pclMapFilteredDownSampled[cloud1_name]->points.size() );
     int it = 0;
-    for( Vector3d pt : pclMapFilteredDownSampled[cloud1_name]->points_ ){
-        kdTreeXYZ_points[it] = pt;
+    for( PCLptXYZRGB pt : pclMapFilteredDownSampled[cloud1_name]->points ){
+        kdTreeXYZ_points[it] = pt.getVector3fMap();
         it++;
     }
 
-    vector<Vector3d> fixed_pts, moving_pts;
+    vector<Vector3> fixed_pts, moving_pts;
     int iter = 0;
     float leaf_range = 0.1;
     KDTreeXYZ* kd_tree = new KDTreeXYZ(kdTreeXYZ_points, leaf_range);
@@ -258,8 +265,8 @@ void PointCloudAligner::finalRefinement(const string &cloud1_name, const string 
     while(iter < _max_iter_num){
 
         int id = 0;
-        for( Vector3d pt : pclMapFilteredDownSampled[cloud2_name]->points_){
-                KDTreeXYZpoint query_point = pt;
+        for( PCLptXYZRGB pt : pclMapFilteredDownSampled[cloud2_name]->points){
+                KDTreeXYZpoint query_point = pt.getVector3fMap();
                 KDTreeXYZpoint answer;
                 int index;
 
@@ -281,22 +288,22 @@ void PointCloudAligner::finalRefinement(const string &cloud1_name, const string 
         }
 
         cerr << FGRN("Iteration N° ") << iter << "\n";
-        cpd::AffineResult ref_result = cpd::affine(fixedRefImg, movingRefImg);
+        cpd::AffineResult refresult = cpd::affine(fixedRefImg, movingRefImg);
 
-        Matrix3d R = ref_result.transform;
-        Vector3d t = ref_result.translation;
-        Matrix4 FinalRefinementTf = Matrix4::Identity();
-        FinalRefinementTf.block<3,1>(0,3) = t;
-        FinalRefinementTf.block<3,3>(0,0) = R;
+        Eigen::Matrix3f R = refresult.transform.cast<float> ();
+        Eigen::Vector3f t = refresult.translation.cast<float> ();
+        Transform FinalRefinementTf = Transform::Identity();
+        FinalRefinementTf.translation() = t;
+        FinalRefinementTf.linear() = R;
 
-        transformPointCloud(FinalRefinementTf, cloud2_name, "rgb");
-        transformPointCloud(FinalRefinementTf, cloud2_name, "exg");
+        pcl::transformPointCloud(*pclMap[cloud2_name], *pclMap[cloud2_name], FinalRefinementTf);
+        pcl::transformPointCloud(*pclMapFiltered[cloud2_name], *pclMapFiltered[cloud2_name], FinalRefinementTf);
 
         if(_verbosity){
             cerr << "\n" << FYEL("Initial Alignment  Affine Matrix") << "\n";
-            cerr << ref_result.transform << "\n";
+            cerr << refresult.transform << "\n";
             cerr << FYEL("Initial Alignment Translation Vector") << "\n";
-            cerr << ref_result.translation.transpose() << "\n" << "\n";
+            cerr << refresult.translation.transpose() << "\n" << "\n";
         }
 
         _R = R*_R;

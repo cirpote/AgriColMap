@@ -7,26 +7,38 @@
 #include <fstream>
 #include <algorithm>
 #include <yaml-cpp/yaml.h>
-#include <memory>
-#include <thread>
 
-// OpenCV Headers
+// Ros Headers
 #include <opencv2/opencv.hpp>
 
-// Open3D Headers
-#include <Core/Core.h>
-#include <IO/IO.h>
-#include <Visualization/Visualization.h>
+// PCL Headers
+#ifdef BUILD_WITH_PCL
+    #include "io/include/pcl/io/ply_io.h"
+    #include "visualization/include/pcl/visualization/pcl_visualizer.h"
+    #include "common/include/pcl/common/common.h"
+    #include "filters/include/pcl/filters/voxel_grid.h"
+    #include "segmentation/include/pcl/segmentation/sac_segmentation.h"
+    #include "common/include/pcl/common/transforms.h"
+#else
+    #include <pcl/io/ply_io.h>
+    #include <pcl/visualization/pcl_visualizer.h>
+    #include <pcl/common/common.h>
+    #include <pcl/filters/voxel_grid.h>
+    #include <pcl/segmentation/sac_segmentation.h>
+    #include <pcl/common/transforms.h>
+#endif
 
-// CPM Headers
+// CPM Header
 #include "../../CPM/CPM.h"
 #include "../../CPM/OpticFlowIO.h"
 
-// cpd Headers
+// cpd Header
 #include "../../cpd/include/cpd/affine.hpp"
 #include "../../cpd/include/cpd/rigid.hpp"
 
-// Srrg Headers
+// GoICP Header
+#include "../../src_GoICP/jly_goicp.h"
+
 #include "../../srrg_core/src/srrg_kdtree/kd_tree.hpp"
 
 /* FOREGROUND */
@@ -51,16 +63,14 @@
 #define UNDL(x)	"\x1B[4m" x RST
 
 // Eigen typedefs
-typedef Eigen::Matrix4d Matrix4;
 typedef Eigen::Matrix3f Matrix3;
-typedef Eigen::Matrix3d Matrix3d;
 typedef Eigen::Vector3f Vector3;
 typedef Eigen::Vector3d Vector3d;
 typedef Eigen::Vector3i Vector3i;
 typedef Eigen::Vector2f Vector2;
 typedef Eigen::Vector2d Vector2d;
 typedef Eigen::Quaternionf Quat;
-typedef Eigen::Isometry3d Transform;
+typedef Eigen::Isometry3f Transform;
 
 enum MatchingType {
     SURF,
@@ -71,9 +81,9 @@ enum MatchingType {
 
 struct GroundTruth{
 
-    Matrix3d _Rgt;
-    Vector3d _tgt;
-    Vector2d _rel_scl;
+    Matrix3 _Rgt;
+    Vector3 _tgt;
+    Vector2 _rel_scl;
 
     ~GroundTruth(){}
     GroundTruth() {
@@ -81,9 +91,9 @@ struct GroundTruth{
         _tgt.setZero();
         _rel_scl.setZero();
     }
-    GroundTruth( const Matrix3d& R,
-                  const Vector3d& t,
-                  const Vector2d& scl ){
+    GroundTruth( const Matrix3& R,
+                  const Vector3& t,
+                  const Vector2& scl ){
         _Rgt = R;
         _tgt = t;
         _rel_scl = scl;
@@ -102,12 +112,25 @@ struct _PointData{
 }; 
 
 typedef std::unordered_map<std::string, const boost::shared_ptr<GroundTruth> > GroundTruthUnorderedMap;
-typedef std::unordered_map<std::string, std::shared_ptr<open3d::PointCloud> > PCLXYZRGB_Map;
 typedef std::unordered_map<std::string, const boost::shared_ptr<Transform> > TransformUnorderedMap;
 
-typedef srrg_core::KDTree<double, 2>::VectorTDVector KDTreeXYvector;
-typedef srrg_core::KDTree<double, 2> KDTreeXY;
-typedef srrg_core::KDTree<double, 2>::VectorTD KDTreeXYpoint;
-typedef srrg_core::KDTree<double, 3>::VectorTD KDTreeXYZpoint;
-typedef srrg_core::KDTree<double, 3>::VectorTDVector KDTreeXYZvector;
-typedef srrg_core::KDTree<double, 3> KDTreeXYZ;
+using namespace pcl::io;
+
+// PCL typedefs
+typedef pcl::PointXYZRGB PCLptXYZRGB;
+typedef pcl::PointXYZ PCLptXYZ;
+typedef pcl::PointCloud<PCLptXYZRGB> PCLPointCloudXYZRGB;
+typedef pcl::PointCloud<PCLptXYZ> PCLPointCloudXYZ;
+typedef std::unordered_map< std::string, PCLPointCloudXYZRGB::Ptr> PCLXYZRGB_unMap;
+typedef pcl::SACSegmentation<PCLptXYZ> PCLsegmentationXYZ;
+typedef pcl::SACSegmentation<PCLptXYZRGB> PCLsegmentationXYZRGB;
+typedef pcl::VoxelGrid<pcl::PointXYZRGB> PCLvoxelGridXYZRGB;
+typedef pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> PCLXYZRGB_viz;
+typedef srrg_core::KDTree<float, 2>::VectorTD KDTreeXYpoint;
+typedef srrg_core::KDTree<float, 2>::VectorTDVector KDTreeXYvector;
+typedef srrg_core::KDTree<float, 2> KDTreeXY;
+typedef srrg_core::KDTree<float, 3>::VectorTD KDTreeXYZpoint;
+typedef srrg_core::KDTree<float, 3>::VectorTDVector KDTreeXYZvector;
+typedef srrg_core::KDTree<float, 3> KDTreeXYZ;
+
+

@@ -86,6 +86,9 @@ class pix4dInputReader{
 
         void readExtCamCalibParams(string& ext_params_str);
 
+        MultiSpectralCalibParams nirParams_, redParams_, greParams_, regParams_;
+        StereoCalibCamParams gre_nir_extrn_, gre_red_extrn_, gre_reg_extrn_, gre_rgb_extrncs_;
+
     private:
         bool getImgsAndSize(CalibCamParams& params, const char* str);
 
@@ -104,8 +107,6 @@ class pix4dInputReader{
 
         istringstream* strstream_;
         ifstream* instream_;
-        MultiSpectralCalibParams nirParams_, redParams_, greParams_, regParams_;
-        StereoCalibCamParams gre_nir_extrn_, gre_red_extrn_, gre_reg_extrn_, gre_rgb_extrncs_;
         unordered_map<string, CalibCamParams> pix4dCalibData_;
         string curr_line_;
         list<string> imgs_;

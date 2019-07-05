@@ -34,10 +34,10 @@ inline float pitchFromQuaternion(const Eigen::Quaternionf& q) {
 std::vector<double> vectorFromString(const std::string& str);
 
 void AffineTransformFromString(const std::string& str,
-                               Eigen::Matrix3d& R,
-                               Eigen::Vector3d& t,
-                               Eigen::Vector2d& scale);
+                               Eigen::Matrix3f& R,
+                               Eigen::Vector3f& t,
+                               Eigen::Vector2f& scale);
 
 Vector3 getScaleFromAffineMatrix(const Matrix3& aff);
 
-unsigned char computeExGforXYZRGBPoint(const Vector3d& pt);
+unsigned char computeExGforXYZRGBPoint(const PCLptXYZRGB& pt);

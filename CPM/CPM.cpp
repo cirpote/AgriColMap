@@ -1,7 +1,9 @@
 #include "CPM.h"
 #include "ImageFeature.h"
 
-#include <opencv2/xfeatures2d.hpp> // for "DAISY" descriptor
+#include <opencv2/xfeatures2d.hpp>// for "DAISY" descriptor
+
+// [4/6/2017 Yinlin.Hu]
 
 #define UNKNOWN_FLOW 1e10
 
@@ -424,13 +426,13 @@ int CPM::Matching(FImage& img1, FImage& img1Cloud, FImage& img2, FImage& img2Clo
     return validMatCnt;
 }
 
-void CPM::CreateXYZCloud(std::shared_ptr<open3d::PointCloud> cloud, const cv::Mat &orgCloud, cv::Mat& indexes){
+void CPM::CreateXYZCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, const cv::Mat &orgCloud, cv::Mat& indexes){
 
     for (int i = 0; i < orgCloud.size().height; i++){
         for (int j = 0; j < orgCloud.size().width; j++){
             Eigen::Vector3f curr_point( orgCloud.at<cv::Vec3f>(i,j)[0], orgCloud.at<cv::Vec3f>(i,j)[1], orgCloud.at<cv::Vec3f>(i,j)[2] );
             if( curr_point.norm() > 1e-3 ){
-                cloud->points_.push_back( Vector3d( curr_point(0), curr_point(1), curr_point(2) ) );
+                cloud->points.push_back( pcl::PointXYZ( curr_point(0), curr_point(1), curr_point(2) ) );
                 indexes.at<unsigned char>(i,j) = 1;
             } else {
                 indexes.at<unsigned char>(i,j) = 0;
@@ -441,13 +443,31 @@ void CPM::CreateXYZCloud(std::shared_ptr<open3d::PointCloud> cloud, const cv::Ma
 
 }
 
-std::shared_ptr<open3d::Feature> CPM::NormalsAndFPFHEstimation(std::shared_ptr<open3d::PointCloud> cloud,
-                                                               const float& ratio){
+void CPM::NormalsAndFPFHEstimation(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::PointCloud<pcl::Normal>::Ptr &normals,
+                                   pcl::PointCloud<pcl::FPFHSignature33>::Ptr fpfh, const float& ratio){
 
-    open3d::EstimateNormals(*cloud);
-    std::shared_ptr<open3d::Feature> features = open3d::ComputeFPFHFeature(*cloud);
+    pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> NormalEstimator;
+    NormalEstimator.setInputCloud (cloud);
+    pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ> ());
+    NormalEstimator.setSearchMethod (tree);
+    NormalEstimator.setRadiusSearch(0.1);
+    NormalEstimator.compute(*normals);
 
-    return features;
+    // Create the FPFH estimation class, and pass the input dataset+normals to it
+    pcl::FPFHEstimationOMP<pcl::PointXYZ, pcl::Normal, pcl::FPFHSignature33> fpfhEst;
+    fpfhEst.setNumberOfThreads(12);
+    //pcl::FPFHEstimation<pcl::PointXYZ, pcl::Normal, pcl::FPFHSignature33> fpfhEst;
+    fpfhEst.setInputCloud (cloud);
+    fpfhEst.setInputNormals (normals);
+    fpfhEst.setSearchMethod(tree);
+
+    if(ratio == 0)
+        fpfhEst.setRadiusSearch (0.06);
+    else
+        fpfhEst.setRadiusSearch (0.06*ratio);
+    fpfhEst.compute (*fpfh);
+
+    return;
 }
 
 void CPM::imDaisy(FImage& img, FImage& imgCloud, const float& cloud_ratio, UCImage& outFtImg_Exg, UCImage& outFtImg_Elev)
@@ -489,24 +509,27 @@ void CPM::imDaisy(FImage& img, FImage& imgCloud, const float& cloud_ratio, UCIma
 
     if( _useGeomFeats ) {
         // Creating the Cloud
-        std::shared_ptr<open3d::PointCloud> cloud (new open3d::PointCloud);
-        std::shared_ptr<open3d::Feature> fpfh (new open3d::Feature() );
+        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
+        pcl::PointCloud<pcl::Normal>::Ptr cloud_normals (new pcl::PointCloud<pcl::Normal>);
+        pcl::PointCloud<pcl::FPFHSignature33>::Ptr fpfh (new pcl::PointCloud<pcl::FPFHSignature33> ());
         cv::Mat cloudIndexes(h, w, CV_8UC1, cv::Scalar(0));
         CreateXYZCloud(cloud, cvImg_Elev, cloudIndexes);
-        fpfh = NormalsAndFPFHEstimation(cloud, cloud_ratio);
+        NormalsAndFPFHEstimation(cloud, cloud_normals, fpfh, cloud_ratio);
 
         // Normalizing FPFH descriptor
         int fpfhSize = 33;
-        for (int i = 0; i < fpfh->Num(); i++){
+        for (int i = 0; i < fpfh->size(); i++){
                 float normalizer = 0.f;
                 for (int k = 0; k < fpfhSize; k++){
-                    normalizer +=  fpfh->data_(i,k) * fpfh->data_(i,k);
+                    normalizer +=  fpfh->points[i].histogram[k]*fpfh->points[i].histogram[k];
                 }
                 normalizer = sqrt(normalizer);
                 for (int k = 0; k < fpfhSize; k++){
-                    fpfh->data_(i,k) /= normalizer;
+                    fpfh->points[i].histogram[k] /= normalizer;
                 }
         }
+
+
 
         int counter = 0;
         for (int i = 0; i < h; i++){
@@ -514,14 +537,13 @@ void CPM::imDaisy(FImage& img, FImage& imgCloud, const float& cloud_ratio, UCIma
                 int idx = i*w + j;
                 if( cloudIndexes.at<unsigned char>(i, j) == 1 ){
                     for (int k = 0; k < fpfhSize; k++)
-                        outFtImg_Elev.pData[idx*fpfhSize + k] = (unsigned char)round(fpfh->data_(counter,k)*255);
+                        outFtImg_Elev.pData[idx*fpfhSize + k] = (unsigned char)round(fpfh->points[counter].histogram[k]*255);
                     counter++;
                 } else if( cloudIndexes.at<unsigned char>(i, j) == 0 ) {
                     for (int k = 0; k < fpfhSize; k++)
                         outFtImg_Elev.pData[idx*fpfhSize + k] = 0;
                 }
             }
-            //std::cerr << counter << " ";
         }
     }
 }
@@ -617,14 +639,17 @@ float CPM::MatchCost(FImage& img1, FImage& img2, UCImage* im1_exg, UCImage* im1_
     }
 #else
 
+        //std::cerr << "totalDiffExg";
         for (int idx = 0; idx < ch; idx++)
             totalDiffExg += abs(p1[idx] - p2[idx]);
 
+        //std::cerr << "totalDiffElev";
         for (int idx = 0; idx < chCloud; idx++)
             totalDiffElev += abs(p1e[idx] - p2e[idx]);
 
 #endif
-    return _vis_weight * totalDiffExg + _geom_weight * totalDiffElev;
+    //std::cerr << _useVisFeats << " " << _useGeomFeats << " " << _vis_weight << " " << _geom_weight << "fine \n";
+    return totalDiffExg + .5 * totalDiffElev;
 
 }
 

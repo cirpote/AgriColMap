@@ -12,7 +12,7 @@ input_clouds:
 aligner_params:
 
   # Dense Opt. Flow, and Final Ref. Params
-  max_iter_number:                    2
+  max_iter_number:                    3
   verbosity:                          true
   store_dense_optical_flow:           false
   show_dpf_correspondences:           true
@@ -22,5 +22,5 @@ aligner_params:
   use_visual_features:                true
   visual_features_weight:	      1
   use_geometric_features:             false
-  geometric_features_weight:          0.5
+  geometric_features_weight:          0.5 
 

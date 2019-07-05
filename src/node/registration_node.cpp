@@ -2,9 +2,10 @@
 
 using namespace std;
 
-
-
 int main(int argc, char **argv) {
+
+    string ciao = _package_path + "/src/node/20180524-mavic-uav-soybean-eschikon/point_cloud.ply";
+
     // Pix4d Calib Parameters
     string input_calibcanparams_str = _package_path + "/src/node/08may2019_jesi_bis/1_initial/params/" + "08may2019_jesi_bis_calibrated_camera_parameters" + ".txt";
     string input_extcalibcanparams_str = _package_path + "/src/node/08may2019_jesi_bis/1_initial/params/" + "08may2019_jesi_bis_calibrated_external_camera_parameters" + ".txt";
@@ -44,39 +45,46 @@ int main(int argc, char **argv) {
 
     /*pix4dReader.printMultiSpectralParams();
     pix4dReader.printStereoParams();*/
-
-    std::shared_ptr<open3d::PointCloud> cloud_ptr ( new open3d::PointCloud() );
-    if (!ReadPointCloud(input_pcl_str, *cloud_ptr)) 
-        cerr << FGRN("Failed to read: ") << input_pcl_str << "\n";
     
-    int id_prova = 91;
+    PCLPointCloudXYZRGB::Ptr _pcl_data( new PCLPointCloudXYZRGB() );
+    pcl::io::loadPLYFile<PCLptXYZRGB> ( input_pcl_str, *_pcl_data);
+    
+    int id_prova = 112;
     pix4dReader.printParams(id_prova);
     CalibCamParams&& CalibData = pix4dReader.getCalibData(id_prova);
 
     cv::Mat output_img( cv::Size(CalibData.img_width, CalibData.img_height), CV_8UC3, cv::Scalar(0,0,0) );
+    cv::Mat output_gre( cv::Size(pix4dReader.greParams_.img_width, pix4dReader.greParams_.img_height), CV_8UC1, 0 );
 
-    for( unsigned int iter = 0; iter < cloud_ptr->points_.size(); ++iter){
-        
-        Eigen::Vector3d& pt = cloud_ptr->points_[iter]; 
-        Eigen::Vector3d& pt_color = cloud_ptr->colors_[iter];
-        Eigen::Vector3d cam_pt = CalibData.cam_R.transpose()*( pt - CalibData.cam_t );
-        //std::cout << cam_pt.transpose() << "\n";
+    for( PCLptXYZRGB& pt : *_pcl_data){
+        Eigen::Vector3d cam_pt = CalibData.cam_R.transpose()*( Eigen::Vector3d(pt.x, pt.y, pt.z) - CalibData.cam_t );
         Eigen::Vector2d uv_pt;
+        uv_pt(0) = -( cam_pt(0)/cam_pt(2) ) * CalibData.K(0,0) + CalibData.K(0,2);
+        uv_pt(1) = -( cam_pt(1)/cam_pt(2) ) * CalibData.K(1,1) + CalibData.K(1,2);
 
-        uv_pt(0) = -cam_pt(0)/cam_pt(2)*CalibData.K(0,0) + CalibData.K(0,2);
-        uv_pt(1) = -cam_pt(1)/cam_pt(2)*CalibData.K(1,1) + CalibData.K(1,2);
+        /*Eigen::Vector3d cam_pt_gre = - pix4dReader.gre_rgb_extrncs_.t_ + CalibData.cam_R.transpose()*( Eigen::Vector3d(pt.x, pt.y, pt.z) - CalibData.cam_t );
+        Eigen::Vector2d uv_pt_gre;
+        uv_pt_gre(0) = -( uv_pt_gre(0)/uv_pt_gre(2) ) * pix4dReader.greParams_.K(0,0) + pix4dReader.greParams_.K(0,2);
+        uv_pt_gre(1) = -( uv_pt_gre(1)/uv_pt_gre(2) ) * pix4dReader.greParams_.K(1,1) + pix4dReader.greParams_.K(1,2);*/
 
-        if( uv_pt(0) > 0 && uv_pt(0) < CalibData.img_width && uv_pt(1) > 0 && uv_pt(1) < CalibData.img_height ){
-            //cout << pt_color.transpose() * 255 << "\n";
-            output_img.at<cv::Vec3b>( uv_pt(0), uv_pt(1) )[0] = pt_color(0)*255.f;
-            output_img.at<cv::Vec3b>( uv_pt(0), uv_pt(1) )[1] = pt_color(1)*255.f;
-            output_img.at<cv::Vec3b>( uv_pt(0), uv_pt(1) )[2] = pt_color(2)*255.f;
+        if( uv_pt(0) > 0 && uv_pt(0) < pix4dReader.greParams_.img_width && uv_pt(1) > 0 && uv_pt(1) < pix4dReader.greParams_.img_height ){
+            int ExG = computeExGforXYZRGBPoint(pt);
+            output_img.at<cv::Vec3b>( uv_pt(1), uv_pt(0) )[0] = pt.b;//0;
+            output_img.at<cv::Vec3b>( uv_pt(1), uv_pt(0) )[1] = pt.g;//ExG*5;//(int)pt.g;
+            output_img.at<cv::Vec3b>( uv_pt(1), uv_pt(0) )[2] = pt.r;//0;//(int)pt.r;
         }
 
     }
 
-    cv::imwrite("/home/ciro/AgriColMap/output.jpg", output_img);
 
+    cv::imwrite("/home/ciro/AgriColMap/output.png", output_img);
+
+    PointCloudViz viz;
+    viz.setViewerBackground(255,255,255);
+    viz.showCloud( _pcl_data, "row_cloud" );
+
+    viz.setViewerPosition(0,0,80,-1,0,0);
+    viz.spingUntilDeath();
 
     return 0;
 }

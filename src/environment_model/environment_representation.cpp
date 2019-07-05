@@ -1,28 +1,30 @@
 #include "environment_representation.h"
 
-EnvironmentRepresentation::EnvironmentRepresentation(const std::string& cloudName) : _cloudName(cloudName) {}
+EnvironmentRepresentation::EnvironmentRepresentation(const std::string& cloudName) : _cloudName(cloudName) {} //, _scaleNoise(1.f, 1.f) {}
 
-void EnvironmentRepresentation::loadFromPCLcloud(const std::shared_ptr<open3d::PointCloud> pointCloud,
+void EnvironmentRepresentation::loadFromPCLcloud( const PCLPointCloudXYZRGB::Ptr& pointCloud,
                                                   const float& square_size,
-                                                  const Vector2d &imgCenter,
+                                                  const Vector2& imgCenter,
                                                   const float& radius,
                                                   const cv::Size& gridMapSize){
 
     _square_size = square_size;
-    minPt = pointCloud->GetMinBound();
-    maxPt = pointCloud->GetMaxBound();
+    pcl::getMinMax3D(*pointCloud, minPt, maxPt);
 
     _width = gridMapSize.width;
     _height = gridMapSize.height;
 
-    minPt(0) = - ( _width / 2 ) * square_size + imgCenter(0);
-    maxPt(1) = - ( _height / 2 ) * square_size + imgCenter(1);
+    minPt.x = - ( _width / 2 ) * square_size + imgCenter(0);
+    maxPt.y = - ( _height / 2 ) * square_size + imgCenter(1);
 
-    x_coord = minPt(0);
-    y_coord = maxPt(1);
-    altitude_scale = 255.0 / (maxPt(2) - minPt(2));
+    x_coord = minPt.x;
+    y_coord = maxPt.y;
+    altitude_scale = 255.0 / (maxPt.z - minPt.z);
 
-    _gridMap = std::vector< std::vector<PclPoint> >( _width * _height);
+    PCLptXYZRGB init_pt;
+    init_pt.x = 0.f; init_pt.y = 0.f; init_pt.z = 0.f;
+
+    _gridMap = std::vector< std::vector<PCLptXYZRGB> >( _width * _height);
     KDTreeXYvector kdTreeXY_points(_width * _height);
     for(unsigned int r = 0; r < _height; ++r){
         for(unsigned int c = 0; c < _width; ++c){
@@ -34,9 +36,8 @@ void EnvironmentRepresentation::loadFromPCLcloud(const std::shared_ptr<open3d::P
     float leaf_range = 0.1;
     KDTreeXY* kd_tree = new KDTreeXY(kdTreeXY_points, leaf_range);
 
-    unsigned int iter = 0;
-    for( Vector3d pt : pointCloud->points_){  
-      KDTreeXYpoint query_point = pt.head(2);
+    for( PCLptXYZRGB pt : pointCloud->points){
+      KDTreeXYpoint query_point = pt.getVector3fMap().head(2);
       KDTreeXYpoint answer;
       int index;
 
@@ -45,53 +46,49 @@ void EnvironmentRepresentation::loadFromPCLcloud(const std::shared_ptr<open3d::P
           float c_idx = ( (answer(0) - x_coord) / square_size );
           float r_idx = ( (answer(1) - y_coord) / square_size );
           int _gridMapIndex = c_idx + r_idx * _width;
-
-          PclPoint curr_pt_;
-          curr_pt_.xyz_ = pt;
-          curr_pt_.color_ = pointCloud->colors_[iter];
-          _gridMap[_gridMapIndex].push_back(curr_pt_);
+           _gridMap[_gridMapIndex].push_back(pt);
       }
-      iter++;
     }
+
 }
 
-PclPoint EnvironmentRepresentation::computeAveragePoint(std::vector<PclPoint>& ptVec,
+PCLptXYZRGB EnvironmentRepresentation::computeAveragePoint(std::vector<PCLptXYZRGB>& ptVec,
                                                            const unsigned int& col,
                                                            const unsigned int& row){
 
-    PclPoint out_pt;
+    PCLptXYZRGB out_pt;
     float sum = 0.f; float x = 0.f; float y = 0.f;
     float z = 0.f; float r = 0.f; float g = 0.f; float b = 0.f;
-    Vector2d nom_pt(x_coord + col * _square_size, y_coord + row * _square_size);
+    Vector2 nom_pt(x_coord + col * _square_size, y_coord + row * _square_size);
     float radius = 0.01;
     float std_dev = 0.04;
     float den = 2.f * std_dev * std_dev;
     int iter = 0;
-    for( PclPoint pt : ptVec ){
-        if(pt.xyz_.norm() > 1e-4){
+    for( PCLptXYZRGB pt : ptVec ){
+        if(pt.getVector3fMap().norm() > 1e-4){
             //float weight = ( nom_pt - pt.getVector3fMap().head(2) ).norm()/radius;
             //float weight =  float( exp ( - (double) ( ( nom_pt - pt.getVector3fMap().head(2) ).norm() ) / ( (double)(2.0 * radius * radius) ) ) );
-            float dist = ( nom_pt - pt.xyz_.head(2) ).norm();
+            float dist = ( nom_pt - pt.getVector3fMap().head(2) ).norm();
             float weight = 1 / exp ( dist / den );
             //setprecision(10);
             //std::cerr << setprecision(10) << nom_pt.transpose() << " " << pt.getVector3fMap().head(2).transpose() << " " << dist << " " << 1 / exp ( dist / (2.0 * 0.04 * 0.04) )  << "\n";
             sum += weight;
-            x += pt.xyz_(0)*weight;
-            y += pt.xyz_(1)*weight;
-            z += pt.xyz_(2)*weight;
-            r += (float)pt.color_(0)*weight;
-            g += (float)pt.color_(1)*weight;
-            b += (float)pt.color_(2)*weight;
+            x += pt.x*weight;
+            y += pt.y*weight;
+            z += pt.z*weight;
+            r += (float)pt.r*weight;
+            g += (float)pt.g*weight;
+            b += (float)pt.b*weight;
             iter++;
         }
     }
     if(iter){
-        out_pt.xyz_(0) = x/sum;
-        out_pt.xyz_(1) = y/sum;
-        out_pt.xyz_(2) = z/sum;
-        out_pt.color_(0) = r/sum;
-        out_pt.color_(1) = g/sum;
-        out_pt.color_(2) = b/sum;
+        out_pt.x = x/sum;
+        out_pt.y = y/sum;
+        out_pt.z = z/sum;
+        out_pt.r = (int)(r/sum);
+        out_pt.g = (int)(g/sum);
+        out_pt.b = (int)(b/sum);
         return out_pt;
     }
 }
@@ -108,28 +105,22 @@ void EnvironmentRepresentation::computeMMGridMap(){
     int iter = 0;
     for(unsigned int r = 0; r < _height; ++r){
         for(unsigned int c = 0; c < _width; ++c, ++iter){
-            PclPoint pt = computeAveragePoint(_gridMap[iter], c, r);
-            if( pt.xyz_.norm() <= 1e-3 )
+            PCLptXYZRGB pt = computeAveragePoint(_gridMap[iter], c, r);
+            if( pt.getVector3fMap().norm() <= 1e-3 )
                 continue;
-            int ExG = computeExGforXYZRGBPoint(pt.color_);
+            int ExG = computeExGforXYZRGBPoint(pt);
             exgImg.at<uchar>(c,r) = ExG;
             exgImgColor.at<cv::Vec3b>(c,r)[1] = ExG;
-            elevImg.at<uchar>(c,r) = altitude_scale * ( pt.xyz_(2) - minPt(2) );
-            xyzImg.at<cv::Vec3f>(c,r)[0] = pt.xyz_(0);
-            xyzImg.at<cv::Vec3f>(c,r)[1] = pt.xyz_(1);
-            xyzImg.at<cv::Vec3f>(c,r)[2] = pt.xyz_(2);
-            rgbImg.at<cv::Vec3b>(c,r)[0] = pt.color_(0)*255.f;
-            rgbImg.at<cv::Vec3b>(c,r)[1] = pt.color_(1)*255.f;
-            rgbImg.at<cv::Vec3b>(c,r)[2] = pt.color_(2)*255.f;
+            elevImg.at<uchar>(c,r) = altitude_scale * ( pt.z - minPt.z );
+            xyzImg.at<cv::Vec3f>(c,r)[0] = pt.x;
+            xyzImg.at<cv::Vec3f>(c,r)[1] = pt.y;
+            xyzImg.at<cv::Vec3f>(c,r)[2] = pt.z;
+            rgbImg.at<cv::Vec3b>(c,r)[0] = pt.b;
+            rgbImg.at<cv::Vec3b>(c,r)[1] = pt.g;
+            rgbImg.at<cv::Vec3b>(c,r)[2] = pt.r;
         }
     }
 
     cv::normalize(xyzImg, xyzImgUChar, 255, 0, cv::NORM_MINMAX);
     xyzImgUChar.convertTo(xyzImgUChar, CV_8UC3);
-
-    /*cv::imshow("rgbImg_", rgbImg);
-    cv::imshow("exgImg_", exgImg);
-    cv::imshow("elevImg_", elevImg);
-    cv::waitKey(0);
-    cv::destroyAllWindows();*/
 }
