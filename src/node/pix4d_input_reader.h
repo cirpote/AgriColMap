@@ -11,10 +11,9 @@ struct StereoCalibCamParams{
     StereoCalibCamParams() : t_( Eigen::Vector3d::Zero() ), R_( Eigen::Matrix3d::Identity() ){};
 
     void print(){
-    cout << "Rotation Matrix:\n" << R_ << "\n\n";
-    cout << "Translation:\n" << t_ <<  "\n\n";
+        cout << "Rotation Matrix:\n" << R_ << "\n\n";
+        cout << "Translation:\n" << t_ <<  "\n\n";
     }
-
 };
 
 struct MultiSpectralCalibParams{
@@ -43,11 +42,12 @@ struct CalibCamParams{
     Eigen::Vector2d t_dist_coeffs;
     Eigen::Vector3d cam_t;
     Eigen::Matrix<double,6,1> external_cam_T; 
-    Eigen::Matrix3d cam_R;
+    Eigen::Matrix3d cam_R, Rx_ext, Ry_ext, Rz_ext;
 
     CalibCamParams() : K(Eigen::Matrix3d::Identity()), img_width(0), img_height(0), r_dist_coeffs(Eigen::Vector3d::Zero()), 
                        t_dist_coeffs(Eigen::Vector2d::Zero()), cam_t(Eigen::Vector3d::Zero()), cam_R(Eigen::Matrix3d::Identity()),
-                       external_cam_T( Eigen::Matrix<double,6,1>::Zero() ) {};
+                       external_cam_T( Eigen::Matrix<double,6,1>::Zero() ), Rx_ext(Eigen::Matrix3d::Identity() ),
+                       Ry_ext(Eigen::Matrix3d::Identity() ), Rz_ext(Eigen::Matrix3d::Identity() ) {};
     
     void print(){
         cout.precision(10);
@@ -86,10 +86,15 @@ class pix4dInputReader{
 
         void readExtCamCalibParams(string& ext_params_str);
 
+        void readOffset(string& offset_str);
+
+        void loadXYZPointCloud( std::string& cloud_path, PCLPointCloudXYZRGB::Ptr cloud );
+
         static size_t split(const string &txt, vector<string> &strs, char ch);
 
         MultiSpectralCalibParams nirParams_, redParams_, greParams_, regParams_;
         StereoCalibCamParams gre_nir_extrn_, gre_red_extrn_, gre_reg_extrn_, gre_rgb_extrncs_;
+        Eigen::Vector3d offset;
 
     private:
         bool getImgsAndSize(CalibCamParams& params, const char* str);

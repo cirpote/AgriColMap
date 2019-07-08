@@ -95,6 +95,69 @@ void pix4dInputReader::getSize(MultiSpectralCalibParams& params){
     strstream_->clear(); 
 }
 
+void pix4dInputReader::loadXYZPointCloud( std::string& cloud_path, PCLPointCloudXYZRGB::Ptr cloud ){
+
+    istringstream* strstream_( new istringstream() );
+    ifstream* instream_( new ifstream(cloud_path) );
+
+    std::string line_str;
+    while(getline( *instream_, line_str)){
+        vector<string> line_chunks; 
+        pix4dInputReader::split(line_str, line_chunks, ' ');
+
+        PCLptXYZRGB pt;
+        Eigen::Vector3d pt3d;
+        Eigen::Vector3i pt3i;
+        strstream_->str(line_chunks[0]);
+        *strstream_ >> pt3d(0); strstream_->clear();
+        strstream_->str(line_chunks[1]);
+        *strstream_ >> pt3d(1); strstream_->clear();
+        strstream_->str(line_chunks[2]);
+        *strstream_ >> pt3d(2); strstream_->clear();
+        strstream_->str(line_chunks[3]);
+        *strstream_ >> pt3i(0); strstream_->clear();
+        strstream_->str(line_chunks[4]);
+        *strstream_ >> pt3i(1); strstream_->clear();
+        strstream_->str(line_chunks[5]);
+        *strstream_ >> pt3i(2); strstream_->clear();
+
+        pt3d -= Eigen::Vector3d(351785, 4817095, 102);
+
+        pt.x = pt3d(0);
+        pt.y = pt3d(1);
+        pt.z = pt3d(2);
+        pt.r = (uint8_t)pt3i(0);
+        pt.g = (uint8_t)pt3i(1);
+        pt.b = (uint8_t)pt3i(2);
+
+        // cout.precision(10);
+        // cout << line_chunks[0] << " " << line_chunks[1] << "\n";
+        // cout << pt3d.transpose() << " " << pt3i.transpose() << "\n";
+        // cout << pt.x << " " << pt.y << " " << pt.z << " " << (int)pt.r << " " << (int)pt.g << " " << (int)pt.b << "\n";
+        // std::exit(1);
+
+        cloud->points.push_back(pt);
+
+    }
+}
+
+void pix4dInputReader::readOffset(string& offset_str){
+    instream_->open(offset_str);
+    getline( *instream_, curr_line_);
+    vector<string> line_chunks; 
+    split(curr_line_, line_chunks, ' ');
+    strstream_->str(line_chunks[1]);
+    *strstream_ >> offset(0);
+    strstream_->clear();
+    strstream_->str(line_chunks[2]);
+    *strstream_ >> offset(1);
+    strstream_->clear();
+    strstream_->str(line_chunks[3]);
+    *strstream_ >> offset(2);
+    strstream_->clear();
+    instream_->close();
+}
+
 void pix4dInputReader::readExtCamCalibParams(string& ext_params_str){
 
     instream_->open(ext_params_str);
@@ -121,7 +184,14 @@ void pix4dInputReader::readExtCamCalibParams(string& ext_params_str){
         strstream_->str(line_chunks[6]);
         *strstream_ >> curr_ext_Tf(5);  
         strstream_->clear(); 
+        float omega = curr_ext_Tf(3) * ( M_PI / 180.f );
+        float phi = curr_ext_Tf(4) * ( M_PI / 180.f );
+        float kappa = curr_ext_Tf(5) * ( M_PI / 180.f );
+        pix4dCalibData_.at(line_chunks[0]).Rx_ext << 1, 0, 0, 0, cos(omega),  - sin(omega), 0, sin(omega), cos(omega);
+        pix4dCalibData_.at(line_chunks[0]).Ry_ext << cos(phi), 0, sin(phi), 0, 1, 0, -sin(phi), 0, cos(phi);
+        pix4dCalibData_.at(line_chunks[0]).Rz_ext << cos(kappa), -sin(kappa), 0, sin(kappa), cos(kappa), 0, 0, 0, 1;
     }
+    
     instream_->close();
 }
 
