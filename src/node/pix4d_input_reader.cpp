@@ -88,10 +88,10 @@ void pix4dInputReader::getSize(MultiSpectralCalibParams& params){
     split(curr_line_, line_chunks, ' ');
 
     strstream_->str(line_chunks[0]);
-    *strstream_ >> nirParams_.img_width;
+    *strstream_ >> params.img_width;
     strstream_->clear();
     strstream_->str(line_chunks[1]);
-    *strstream_ >> nirParams_.img_height;
+    *strstream_ >> params.img_height;
     strstream_->clear(); 
 }
 

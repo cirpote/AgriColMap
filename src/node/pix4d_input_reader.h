@@ -86,6 +86,8 @@ class pix4dInputReader{
 
         void readExtCamCalibParams(string& ext_params_str);
 
+        static size_t split(const string &txt, vector<string> &strs, char ch);
+
         MultiSpectralCalibParams nirParams_, redParams_, greParams_, regParams_;
         StereoCalibCamParams gre_nir_extrn_, gre_red_extrn_, gre_reg_extrn_, gre_rgb_extrncs_;
 
@@ -102,7 +104,6 @@ class pix4dInputReader{
         void getDistCoeffs(T& params);
 
         void getCamPose(CalibCamParams& params);
-        size_t split(const string &txt, vector<string> &strs, char ch);
         void dump(ostream &out, const vector<string> &v);
 
         istringstream* strstream_;
