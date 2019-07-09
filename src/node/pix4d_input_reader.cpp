@@ -18,7 +18,7 @@ int pix4dInputReader::getCalibDataSize(){
     return pix4dCalibData_.size();
 }
 
-CalibCamParams pix4dInputReader::getCalibData(int& id){
+CalibCamParams pix4dInputReader::getCalibData(int id){
     int index = 0;
     for ( list< string >::iterator it = imgs_.begin(); it != imgs_.end(); ++it ){
         if(index == id)
@@ -75,7 +75,7 @@ void pix4dInputReader::printStereoParams(){
     cout << "\n" << "GRE_REG Stereo Params: \n\n";
     gre_reg_extrn_.print();
     cout << "\n" << "GRE_RGB Stereo Params: \n\n";
-    gre_rgb_extrncs_.print(); 
+    gre_rgb_extrn_.print(); 
 }
 
 void pix4dInputReader::printParams(string& key){
@@ -213,7 +213,7 @@ void pix4dInputReader::readStereoParams(string& gre_nir_str,
     instream_->close();
 
     instream_->open(gre_rgb_str);
-    getStereoCalibParams(gre_rgb_extrncs_);
+    getStereoCalibParams(gre_rgb_extrn_);
     instream_->close();
 }
 

@@ -50,72 +50,142 @@ int main(int argc, char **argv) {
     PCLPointCloudXYZRGB::Ptr _pcl_data( new PCLPointCloudXYZRGB() );
     pix4dReader.loadXYZPointCloud( input_pcl_str_xyz, _pcl_data );
     // pcl::io::loadPLYFile<PCLptXYZRGB> ( input_pcl_str_xyz, *_pcl_data);
-    std::cout << "dimensione PCL " << _pcl_data->points.size() << "\n";
+    
 
-    PCLPointCloudXYZRGB::Ptr _pcl_data_gre( new PCLPointCloudXYZRGB( (uint32_t)_pcl_data->points.size() , (uint32_t)1, PCLptXYZRGB(0,0,0) ) );
-
-    int id_prova = 60; // 112, 90
+    int id_prova = 90; // 112, 90
     pix4dReader.printParams(id_prova);
+    pix4dReader.nirParams_.print();
+    pix4dReader.gre_rgb_extrn_.print();
+    pix4dReader.gre_nir_extrn_.print();
     CalibCamParams&& CalibData = pix4dReader.getCalibData(id_prova);
 
-    std::cout << "qui " << "/home/ciro/AgriColMap/src/node/08may2019_jesi_bis/IMG_190508_100143_0125_GRE.TIF" << "\n";
-    cv::Mat curr_gre_img = cv::imread(  "/home/ciro/AgriColMap/src/node/08may2019_jesi_bis/IMG_190508_100143_0125_GRE.TIF", CV_LOAD_IMAGE_GRAYSCALE );
-    // cv::imshow("gre_img", curr_gre_img);
-    // cv::waitKey(0);
-
-    cout << CalibData.Rx_ext << "\n\n";
-    cout << CalibData.Ry_ext << "\n\n";
-    cout << CalibData.Rz_ext << "\n\n";
-
-    cout << CalibData.Rx_ext * CalibData.Ry_ext * CalibData.Rz_ext << "\n\n";
-
-    cout << CalibData.Rz_ext * CalibData.Ry_ext * CalibData.Rx_ext << "\n\n";
-
     cv::Mat output_img( cv::Size(CalibData.img_width, CalibData.img_height), CV_8UC3, cv::Scalar(0,0,0) );
+    cv::Mat output_img_nir( cv::Size(CalibData.img_width, CalibData.img_height), CV_8UC1, cv::Scalar(0) );
+    cv::Mat nir_img = cv::imread(_package_path + "/src/node/08may2019_jesi_bis/" + CalibData.nir_img);
+    cv::Mat gre_img = cv::imread(_package_path + "/src/node/08may2019_jesi_bis/" + CalibData.gre_img);
 
-    //std::cout << "qui\n";
-
-    int index = 0;
     for( PCLptXYZRGB& pt : *_pcl_data){
 
-        // Eigen::Vector3d cam_pt =  CalibData.Rx_ext.transpose() * CalibData.cam_R.transpose() *  (  CalibData.Rx_ext.transpose() * Eigen::Vector3d(pt.x, pt.y, pt.z) - CalibData.cam_t );
         Eigen::Vector3d cam_pt = ( CalibData.Rx_ext * CalibData.Ry_ext * CalibData.Rz_ext ).transpose() * ( Eigen::Vector3d(pt.x, pt.y, pt.z) - CalibData.cam_t );
         Eigen::Vector2d uv_pt;
         uv_pt(0) = ( cam_pt(0)/cam_pt(2) );
         uv_pt(1) = ( cam_pt(1)/cam_pt(2) );
         back_project( CalibData, uv_pt );
 
-
-        // Eigen::Vector3d cam_pt_gre = - pix4dReader.gre_rgb_extrncs_.t_ + CalibData.cam_R.transpose()*( Eigen::Vector3d(pt.x, pt.y, pt.z) - CalibData.cam_t );
-        // Eigen::Vector2d uv_pt_gre( cam_pt_gre(0)/cam_pt_gre(2), cam_pt_gre(1)/cam_pt_gre(2) );
-        // back_project( pix4dReader.greParams_, uv_pt_gre  );
-
-        // if( uv_pt_gre(0) > 0 && uv_pt_gre(0) < pix4dReader.greParams_.img_width && uv_pt_gre(1) > 0 && uv_pt_gre(1) < pix4dReader.greParams_.img_height ){
-        //     PCLptXYZRGB& GREpt = _pcl_data_gre->points[index];
-        //     GREpt.x = pt.x;
-        //     GREpt.y = pt.y;
-        //     GREpt.z = pt.z;
-        //     //std::cout << "crasho qui\n";
-        //     int greColor = curr_gre_img.at<uchar>( uv_pt_gre(1), uv_pt_gre(0) );
-        //     GREpt.r = greColor;
-        //     GREpt.g = greColor;
-        //     GREpt.b = greColor;
-        // }
-        //std::cout << " qui\n";
-
         if( uv_pt(0) > 0 && uv_pt(0) < CalibData.img_width && uv_pt(1) > 0 && uv_pt(1) < CalibData.img_height ){
             int ExG = computeExGforXYZRGBPoint(pt);
-            output_img.at<cv::Vec3b>( uv_pt(1), uv_pt(0) )[0] = pt.b;//0;
-            output_img.at<cv::Vec3b>( uv_pt(1), uv_pt(0) )[1] = pt.g;//ExG*5;//(int)pt.g;
-            output_img.at<cv::Vec3b>( uv_pt(1), uv_pt(0) )[2] = pt.r;//0;//(int)pt.r;
-        }
+            output_img.at<cv::Vec3b>( uv_pt(1), uv_pt(0) )[0] = pt.b;
+            output_img.at<cv::Vec3b>( uv_pt(1), uv_pt(0) )[1] = pt.g;
+            output_img.at<cv::Vec3b>( uv_pt(1), uv_pt(0) )[2] = pt.r;
 
-        index++;
+            cam_pt = cam_pt - pix4dReader.gre_rgb_extrn_.t_ + pix4dReader.gre_nir_extrn_.t_;
+            Eigen::Vector2d uv_pt_nir;
+            uv_pt_nir(0) = ( cam_pt(0)/cam_pt(2) );
+            uv_pt_nir(1) = ( cam_pt(1)/cam_pt(2) );
+            back_project( pix4dReader.nirParams_, uv_pt_nir );
+
+            uint8_t color = 0;
+            if( uv_pt_nir(0) > 0 && uv_pt_nir(0) < pix4dReader.nirParams_.img_width && uv_pt_nir(1) > 0 && uv_pt_nir(1) < pix4dReader.nirParams_.img_height )
+                color = nir_img.at<uchar>( uv_pt_nir(1), uv_pt_nir(0) );
+
+            output_img_nir.at<uchar>( uv_pt(1), uv_pt(0) ) = color;
+        }
     }
 
-    std::cout << "sono qui\n";
-    
     cv::imwrite("/home/ciro/AgriColMap/output.png", output_img);
+    cv::imwrite("/home/ciro/AgriColMap/output_nir.png", output_img_nir);
+
+    /*   GENERATING NIR CLOUD   */
+
+    // cout << CalibData.Rx_ext * CalibData.Ry_ext * CalibData.Rz_ext << "\n\n";
+    // cout << CalibData.Rz_ext * CalibData.Ry_ext * CalibData.Rx_ext << "\n\n";
+    
+    // std::vector<cv::Mat> nirImgs(pix4dReader.getCalibDataSize(), cv::Mat( cv::Size(pix4dReader.greParams_.img_width, pix4dReader.greParams_.img_height), CV_8UC1, cv::Scalar(0) ) );
+    // PCLPointCloudXYZRGB::Ptr _pcl_data_gre( _pcl_data );
+    // std::cout << "dimensione PCL " << _pcl_data->points.size() << "\n";
+    // std::cout << "dimensione PCL " << _pcl_data_gre->points.size() << "\n";
+
+    // for(unsigned int iter = 0; iter < pix4dReader.getCalibDataSize(); ++iter){
+
+    //     CalibCamParams&& CalibDatatemp = pix4dReader.getCalibData(iter);
+    //     // std::cout << _package_path + "/src/node/08may2019_jesi_bis/" + CalibDatatemp.nir_img << "\n";
+    //     nirImgs[iter] = cv::imread( _package_path + "/src/node/08may2019_jesi_bis/" + CalibDatatemp.nir_img );
+
+    // }
+
+    // for( PCLptXYZRGB& pt : *_pcl_data_gre){
+
+    //     for( unsigned int iter = 0; iter < pix4dReader.getCalibDataSize(); ++iter ){
+
+    //         CalibCamParams&& calibData = pix4dReader.getCalibData(iter);
+    //         Eigen::Vector3d cam_pt = ( calibData.Rx_ext * calibData.Ry_ext * calibData.Rz_ext ).transpose() * ( Eigen::Vector3d(pt.x, pt.y, pt.z) - calibData.cam_t );
+    //         cam_pt = cam_pt - pix4dReader.gre_rgb_extrn_.t_ + pix4dReader.gre_nir_extrn_.t_;
+    //         Eigen::Vector2d uv_pt;
+    //         uv_pt(0) = ( cam_pt(0)/cam_pt(2) );
+    //         uv_pt(1) = ( cam_pt(1)/cam_pt(2) );
+    //         back_project( pix4dReader.nirParams_, uv_pt );
+
+    //         if( uv_pt(0) > 50 && uv_pt(0) < pix4dReader.nirParams_.img_width-50 && uv_pt(1) > 50 && uv_pt(1) < pix4dReader.nirParams_.img_height-50 ){
+    //             uint8_t color = nirImgs[iter].at<uchar>( uv_pt(1), uv_pt(0) );
+    //             pt.r = color;
+    //             pt.g = color;
+    //             pt.b = color;
+    //             break;
+    //         }
+    //     }
+    // }
+
+    // pcl::io::savePLYFileBinary( "/home/ciro/AgriColMap/greProva2.ply", *_pcl_data_gre);
+
+
+
+
+
+
+    /*  BACK PROJECTION RGB  */
+
+
+    // cv::Mat output_img( cv::Size(CalibData.img_width, CalibData.img_height), CV_8UC3, cv::Scalar(0,0,0) );
+    // int index = 0;
+    // for( PCLptXYZRGB& pt : *_pcl_data){
+
+    //     // Eigen::Vector3d cam_pt =  CalibData.Rx_ext.transpose() * CalibData.cam_R.transpose() *  (  CalibData.Rx_ext.transpose() * Eigen::Vector3d(pt.x, pt.y, pt.z) - CalibData.cam_t );
+    //     Eigen::Vector3d cam_pt = ( CalibData.Rx_ext * CalibData.Ry_ext * CalibData.Rz_ext ).transpose() * ( Eigen::Vector3d(pt.x, pt.y, pt.z) - CalibData.cam_t );
+    //     Eigen::Vector2d uv_pt;
+    //     uv_pt(0) = ( cam_pt(0)/cam_pt(2) );
+    //     uv_pt(1) = ( cam_pt(1)/cam_pt(2) );
+    //     back_project( CalibData, uv_pt );
+
+
+    //     // Eigen::Vector3d cam_pt_gre = - pix4dReader.gre_rgb_extrncs_.t_ + CalibData.cam_R.transpose()*( Eigen::Vector3d(pt.x, pt.y, pt.z) - CalibData.cam_t );
+    //     // Eigen::Vector2d uv_pt_gre( cam_pt_gre(0)/cam_pt_gre(2), cam_pt_gre(1)/cam_pt_gre(2) );
+    //     // back_project( pix4dReader.greParams_, uv_pt_gre  );
+
+    //     // if( uv_pt_gre(0) > 0 && uv_pt_gre(0) < pix4dReader.greParams_.img_width && uv_pt_gre(1) > 0 && uv_pt_gre(1) < pix4dReader.greParams_.img_height ){
+    //     //     PCLptXYZRGB& GREpt = _pcl_data_gre->points[index];
+    //     //     GREpt.x = pt.x;
+    //     //     GREpt.y = pt.y;
+    //     //     GREpt.z = pt.z;
+    //     //     //std::cout << "crasho qui\n";
+    //     //     int greColor = curr_gre_img.at<uchar>( uv_pt_gre(1), uv_pt_gre(0) );
+    //     //     GREpt.r = greColor;
+    //     //     GREpt.g = greColor;
+    //     //     GREpt.b = greColor;
+    //     // }
+    //     //std::cout << " qui\n";
+
+    //     if( uv_pt(0) > 0 && uv_pt(0) < CalibData.img_width && uv_pt(1) > 0 && uv_pt(1) < CalibData.img_height ){
+    //         int ExG = computeExGforXYZRGBPoint(pt);
+    //         output_img.at<cv::Vec3b>( uv_pt(1), uv_pt(0) )[0] = pt.b;//0;
+    //         output_img.at<cv::Vec3b>( uv_pt(1), uv_pt(0) )[1] = pt.g;//ExG*5;//(int)pt.g;
+    //         output_img.at<cv::Vec3b>( uv_pt(1), uv_pt(0) )[2] = pt.r;//0;//(int)pt.r;
+    //     }
+
+    //     index++;
+    // }
+
+    // std::cout << "sono qui\n";
+    // cv::imwrite("/home/ciro/AgriColMap/output.png", output_img);
     
     //pcl::io::savePLYFileBinary( "/home/ciro/AgriColMap/greProva2.ply", *_pcl_data);
     // PointCloudViz viz;

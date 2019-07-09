@@ -72,7 +72,7 @@ class pix4dInputReader{
         void printMultiSpectralParams();
         void printStereoParams();
         int getCalibDataSize();
-        CalibCamParams getCalibData(int& id);
+        CalibCamParams getCalibData(int id);
 
         void readParamFileMultiSpectral(string& nir_str, 
                                         string& gre_str, 
@@ -93,7 +93,8 @@ class pix4dInputReader{
         static size_t split(const string &txt, vector<string> &strs, char ch);
 
         MultiSpectralCalibParams nirParams_, redParams_, greParams_, regParams_;
-        StereoCalibCamParams gre_nir_extrn_, gre_red_extrn_, gre_reg_extrn_, gre_rgb_extrncs_;
+        StereoCalibCamParams gre_nir_extrn_, gre_red_extrn_, gre_reg_extrn_, gre_rgb_extrn_;
+        unordered_map<string, CalibCamParams> pix4dCalibData_;
         Eigen::Vector3d offset;
 
     private:
@@ -113,7 +114,6 @@ class pix4dInputReader{
 
         istringstream* strstream_;
         ifstream* instream_;
-        unordered_map<string, CalibCamParams> pix4dCalibData_;
         string curr_line_;
         list<string> imgs_;
 
