@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
     pcl::io::loadPLYFile<PCLptXYZRGB> ( input_pcl_str_xyz, *_pcl_data);
     
 
-    int id_prova = 90; // 112, 90
+    int id_prova = 110; // 112, 90
     pix4dReader.printParams(id_prova);
     pix4dReader.nirParams_.print();
     pix4dReader.gre_rgb_extrn_.print();
@@ -61,19 +61,19 @@ int main(int argc, char **argv) {
 
     cv::Mat output_img( cv::Size(CalibData.img_width, CalibData.img_height), CV_8UC3, cv::Scalar(0,0,0) );
     cv::Mat output_img_nir( cv::Size(CalibData.img_width, CalibData.img_height), CV_8UC1, cv::Scalar(0) );
-    cv::Mat nir_img = cv::imread(_package_path + "/src/node/08may2019_jesi_bis/" + CalibData.nir_img);
+    cv::Mat nir_img = cv::imread(_package_path + "/src/node/08may2019_jesi_bis/" + CalibData.nir_img, CV_LOAD_IMAGE_GRAYSCALE);
     cv::Mat gre_img = cv::imread(_package_path + "/src/node/08may2019_jesi_bis/" + CalibData.gre_img);
+
+    cv::flip(nir_img, nir_img, 1);
+    cv::imshow("ciao", nir_img);
+    cv::waitKey(0);
 
     cout << CalibData.Rx_ext << "\n";
     cout << CalibData.Ry_ext << "\n";
 
     for( PCLptXYZRGB& pt : *_pcl_data){
 
-        Eigen::Matrix3d RR = CalibData.Rz_ext * CalibData.Ry_ext * CalibData.Rz_ext;
-
-        Eigen::Vector3d cam_pt = CalibData.K * RR.transpose() * Eigen::Vector3d(pt.x, pt.y, pt.z) - CalibData.K * RR.transpose() * CalibData.cam_t;
-        // Eigen::Vector3d cam_pt = CalibData.cam_R * Eigen::Vector3d(pt.x, pt.y, pt.z) - CalibData.cam_R * CalibData.cam_t;
-
+        Eigen::Vector3d cam_pt = CalibData.K * CalibData.cam_R * Eigen::Vector3d(pt.x, pt.y, pt.z) - CalibData.K * CalibData.cam_R * CalibData.cam_t;
         // Eigen::Vector3d cam_pt =   CalibData.cam_R.transpose() * CalibData.Rx_ext * ( CalibData.Rx_ext.transpose() * Eigen::Vector3d(pt.x, pt.y, pt.z) - CalibData.cam_t );
         // Eigen::Vector3d cam_pt = ( CalibData.Rx_ext * CalibData.Ry_ext * CalibData.Rz_ext ).transpose() * ( Eigen::Vector3d(pt.x, pt.y, pt.z) - CalibData.cam_t );
         Eigen::Vector2d uv_pt;
@@ -82,21 +82,25 @@ int main(int argc, char **argv) {
         //back_project( CalibData, uv_pt );
 
         if( uv_pt(0) > 0 && uv_pt(0) < CalibData.img_width && uv_pt(1) > 0 && uv_pt(1) < CalibData.img_height ){
+        // if( uv_pt(0) > 0 && uv_pt(0) < 1000 && uv_pt(1) > 0 && uv_pt(1) < 1000 ){
             int ExG = computeExGforXYZRGBPoint(pt);
             output_img.at<cv::Vec3b>( uv_pt(1), uv_pt(0) )[0] = 0;//pt.b;
             output_img.at<cv::Vec3b>( uv_pt(1), uv_pt(0) )[1] = ExG*5;//pt.g;
             output_img.at<cv::Vec3b>( uv_pt(1), uv_pt(0) )[2] = 0;//pt.r;
 
             Eigen::Vector3d cam_pt_nir = pix4dReader.nirParams_.K * CalibData.cam_R * Eigen::Vector3d(pt.x, pt.y, pt.z) - pix4dReader.nirParams_.K * CalibData.cam_R * CalibData.cam_t;
-            cam_pt_nir = cam_pt + pix4dReader.nirParams_.K * ( - pix4dReader.gre_rgb_extrn_.t_ + pix4dReader.gre_nir_extrn_.t_ );
+            cam_pt_nir = cam_pt_nir + pix4dReader.nirParams_.K * ( - pix4dReader.gre_rgb_extrn_.t_ + pix4dReader.gre_nir_extrn_.t_ );
             Eigen::Vector2d uv_pt_nir;
             uv_pt_nir(0) = ( cam_pt_nir(0)/cam_pt_nir(2) );
             uv_pt_nir(1) = ( cam_pt_nir(1)/cam_pt_nir(2) );
             // back_project( pix4dReader.nirParams_, uv_pt_nir );
 
-            uint8_t color = 0;
+            int color = 0;
             if( uv_pt_nir(0) > 0 && uv_pt_nir(0) < pix4dReader.nirParams_.img_width && uv_pt_nir(1) > 0 && uv_pt_nir(1) < pix4dReader.nirParams_.img_height )
-                color = nir_img.at<uchar>( uv_pt_nir(1), uv_pt_nir(0) );
+                 color = nir_img.at<uchar>( uv_pt_nir(1), uv_pt_nir(0) );
+
+            // if(ExG*5 > 150)
+                // cout << color << " " << uv_pt_nir.transpose() << " " << uv_pt.transpose() << "\n";
 
             output_img_nir.at<uchar>( uv_pt(1), uv_pt(0) ) = color;
         }
@@ -120,6 +124,7 @@ int main(int argc, char **argv) {
     //     CalibCamParams&& CalibDatatemp = pix4dReader.getCalibData(iter);
     //     // std::cout << _package_path + "/src/node/08may2019_jesi_bis/" + CalibDatatemp.nir_img << "\n";
     //     nirImgs[iter] = cv::imread( _package_path + "/src/node/08may2019_jesi_bis/" + CalibDatatemp.nir_img );
+    //     cv::flip(nirImgs[iter], nirImgs[iter], 1);
 
     // }
 
@@ -127,20 +132,28 @@ int main(int argc, char **argv) {
 
     //     for( unsigned int iter = 0; iter < pix4dReader.getCalibDataSize(); ++iter ){
 
-    //         CalibCamParams&& calibData = pix4dReader.getCalibData(iter);
-    //         Eigen::Vector3d cam_pt = ( calibData.Rx_ext * calibData.Ry_ext * calibData.Rz_ext ).transpose() * ( Eigen::Vector3d(pt.x, pt.y, pt.z) - calibData.cam_t );
-    //         cam_pt = cam_pt - pix4dReader.gre_rgb_extrn_.t_ + pix4dReader.gre_nir_extrn_.t_;
+    //         CalibCamParams&& CalibDatatemp = pix4dReader.getCalibData(iter);
+
+    //         Eigen::Vector3d cam_pt = CalibDatatemp.K * CalibDatatemp.cam_R * Eigen::Vector3d(pt.x, pt.y, pt.z) - CalibDatatemp.K * CalibDatatemp.cam_R * CalibDatatemp.cam_t;
     //         Eigen::Vector2d uv_pt;
     //         uv_pt(0) = ( cam_pt(0)/cam_pt(2) );
     //         uv_pt(1) = ( cam_pt(1)/cam_pt(2) );
-    //         back_project( pix4dReader.nirParams_, uv_pt );
 
-    //         if( uv_pt(0) > 50 && uv_pt(0) < pix4dReader.nirParams_.img_width-50 && uv_pt(1) > 50 && uv_pt(1) < pix4dReader.nirParams_.img_height-50 ){
-    //             uint8_t color = nirImgs[iter].at<uchar>( uv_pt(1), uv_pt(0) );
-    //             pt.r = color;
-    //             pt.g = color;
-    //             pt.b = color;
-    //             break;
+    //         if( uv_pt(0) > 0 && uv_pt(0) < CalibData.img_width && uv_pt(1) > 0 && uv_pt(1) < CalibData.img_height ){
+    //             Eigen::Vector3d cam_pt_nir = pix4dReader.nirParams_.K * CalibDatatemp.cam_R * Eigen::Vector3d(pt.x, pt.y, pt.z) - pix4dReader.nirParams_.K * CalibDatatemp.cam_R * CalibDatatemp.cam_t;
+    //             cam_pt_nir = cam_pt_nir + pix4dReader.nirParams_.K * ( - pix4dReader.gre_rgb_extrn_.t_ + pix4dReader.gre_nir_extrn_.t_ );
+    //             Eigen::Vector2d uv_pt_nir;
+    //             uv_pt_nir(0) = ( cam_pt_nir(0)/cam_pt_nir(2) );
+    //             uv_pt_nir(1) = ( cam_pt_nir(1)/cam_pt_nir(2) );
+    //             int color = 0;
+    //             if( uv_pt_nir(0) > 0 && uv_pt_nir(0) < pix4dReader.nirParams_.img_width && uv_pt_nir(1) > 0 && uv_pt_nir(1) < pix4dReader.nirParams_.img_height ){
+    //                 color = nirImgs[iter].at<uchar>( uv_pt_nir(1), uv_pt_nir(0) );
+    //                 pt.r = color;
+    //                 pt.g = color;
+    //                 pt.b = color;
+    //                 break;
+    //             }
+
     //         }
     //     }
     // }
