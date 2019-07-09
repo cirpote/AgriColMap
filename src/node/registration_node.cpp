@@ -69,7 +69,9 @@ int main(int argc, char **argv) {
 
     for( PCLptXYZRGB& pt : *_pcl_data){
 
-        Eigen::Vector3d cam_pt = CalibData.K * CalibData.cam_R * Eigen::Vector3d(pt.x, pt.y, pt.z) - CalibData.K * CalibData.cam_R * CalibData.cam_t;
+        Eigen::Matrix3d RR = CalibData.Rz_ext * CalibData.Ry_ext * CalibData.Rz_ext;
+
+        Eigen::Vector3d cam_pt = CalibData.K * RR.transpose() * Eigen::Vector3d(pt.x, pt.y, pt.z) - CalibData.K * RR.transpose() * CalibData.cam_t;
         // Eigen::Vector3d cam_pt = CalibData.cam_R * Eigen::Vector3d(pt.x, pt.y, pt.z) - CalibData.cam_R * CalibData.cam_t;
 
         // Eigen::Vector3d cam_pt =   CalibData.cam_R.transpose() * CalibData.Rx_ext * ( CalibData.Rx_ext.transpose() * Eigen::Vector3d(pt.x, pt.y, pt.z) - CalibData.cam_t );
