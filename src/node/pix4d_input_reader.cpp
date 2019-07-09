@@ -187,6 +187,7 @@ void pix4dInputReader::readExtCamCalibParams(string& ext_params_str){
         float omega = curr_ext_Tf(3) * ( M_PI / 180.f );
         float phi = curr_ext_Tf(4) * ( M_PI / 180.f );
         float kappa = curr_ext_Tf(5) * ( M_PI / 180.f );
+        // cout << omega << " " << phi << " " << kappa << "\n";
         pix4dCalibData_.at(line_chunks[0]).Rx_ext << 1, 0, 0, 0, cos(omega),  - sin(omega), 0, sin(omega), cos(omega);
         pix4dCalibData_.at(line_chunks[0]).Ry_ext << cos(phi), 0, sin(phi), 0, 1, 0, -sin(phi), 0, cos(phi);
         pix4dCalibData_.at(line_chunks[0]).Rz_ext << cos(kappa), -sin(kappa), 0, sin(kappa), cos(kappa), 0, 0, 0, 1;
