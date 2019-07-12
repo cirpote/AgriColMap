@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
     pcl::io::loadPLYFile<PCLptXYZRGB> ( input_pcl_str_xyz, *_pcl_data);
     
 
-    int id_prova = 110; // 112, 90
+    int id_prova = 112; // 112, 90
     pix4dReader.printParams(id_prova);
     pix4dReader.nirParams_.print();
     pix4dReader.gre_rgb_extrn_.print();
@@ -226,21 +226,21 @@ int main(int argc, char **argv) {
 template<typename T>
 void back_project(T params, Eigen::Vector2d& uv){
 
-    float r_sq = uv(0)*uv(0) + uv(1)*uv(1);
+    // float r_sq = uv(0)*uv(0) + uv(1)*uv(1);
 
-    Eigen::Vector2d uv_ud;
+    // Eigen::Vector2d uv_ud;
 
-    uv_ud(0) = (1 + params.r_dist_coeffs(0) * r_sq + params.r_dist_coeffs(1) * r_sq * r_sq + params.r_dist_coeffs(2) * r_sq * r_sq * r_sq) * uv(0) +
-               2 * params.t_dist_coeffs(0) * uv(0) * uv(1) + params.t_dist_coeffs(1) * ( r_sq + 2 * uv(0) * uv(0) );
+    // uv_ud(0) = (1 + params.r_dist_coeffs(0) * r_sq + params.r_dist_coeffs(1) * r_sq * r_sq + params.r_dist_coeffs(2) * r_sq * r_sq * r_sq) * uv(0) +
+    //            2 * params.t_dist_coeffs(0) * uv(0) * uv(1) + params.t_dist_coeffs(1) * ( r_sq + 2 * uv(0) * uv(0) );
 
-    uv_ud(1) = (1 + params.r_dist_coeffs(0) * r_sq + params.r_dist_coeffs(1) * r_sq * r_sq + params.r_dist_coeffs(2) * r_sq * r_sq * r_sq) * uv(1) +
-               2 * params.t_dist_coeffs(1) * uv(0) * uv(1) + params.t_dist_coeffs(0) * ( r_sq + 2 * uv(1) * uv(1) );
+    // uv_ud(1) = (1 + params.r_dist_coeffs(0) * r_sq + params.r_dist_coeffs(1) * r_sq * r_sq + params.r_dist_coeffs(2) * r_sq * r_sq * r_sq) * uv(1) +
+    //            2 * params.t_dist_coeffs(1) * uv(0) * uv(1) + params.t_dist_coeffs(0) * ( r_sq + 2 * uv(1) * uv(1) );
 
-    uv(0) = - uv_ud(0) * params.K(0,0) + params.K(0,2);
-    uv(1) = - uv_ud(1) * params.K(1,1) + params.K(1,2); 
+    // uv(0) = - uv_ud(0) * params.K(0,0) + params.K(0,2);
+    // uv(1) = - uv_ud(1) * params.K(1,1) + params.K(1,2); 
 
-    // uv(0) = - uv(0) * params.K(0,0) + params.K(0,2);
-    // uv(1) = - uv(1) * params.K(1,1) + params.K(1,2); 
+    uv(0) = - uv(0) * params.K(0,0) + params.K(0,2);
+    uv(1) = - uv(1) * params.K(1,1) + params.K(1,2); 
 
     // uv(0) = uv(0) * 3659.61 + 2310.04;
     // uv(1) = - uv(1) * 3659.61 + 1706.11;
