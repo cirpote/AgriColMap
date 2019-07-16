@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
     string input_calibcanparams_str_gre_nir = _package_path + "/src/node/" + "gre_nir_stereo" + ".txt";
     string input_calibcanparams_str_gre_red = _package_path + "/src/node/" + "gre_red_stereo" + ".txt";
     string input_calibcanparams_str_gre_reg = _package_path + "/src/node/" + "gre_reg_stereo" + ".txt";
-    string input_calibcanparams_str_gre_rgb = _package_path + "/src/node/" + "gre_rgb_stereo" + ".txt";
+    string input_calibcanparams_str_gre_rgb = _package_path + "/src/node/" + "rgb_gre_stereo" + ".txt";
 
     pix4dInputReader pix4dReader(input_calibcanparams_str);
     pix4dReader.readParamFile();
@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
     pcl::io::loadPLYFile<PCLptXYZRGB> ( input_pcl_str_xyz, *_pcl_data);
     
 
-    int id_prova = 112; // 112, 90
+    int id_prova = 54; // 112, 90
     pix4dReader.printParams(id_prova);
     pix4dReader.nirParams_.print();
     pix4dReader.gre_rgb_extrn_.print();
@@ -96,6 +96,7 @@ int main(int argc, char **argv) {
 
     cv::waitKey(0);
 
+    pix4dReader.gre_rgb_extrn_.print();
 
     for( PCLptXYZRGB& pt : *_pcl_data){
 
@@ -105,6 +106,7 @@ int main(int argc, char **argv) {
         uv_pt(0) = CalibData.K (0,0) * ( cam_pt(0)/cam_pt(2) ) + CalibData.K (0,2);
         uv_pt(1) = CalibData.K (1,1) * ( cam_pt(1)/cam_pt(2) ) + CalibData.K (1,2);
 
+	// CODICE PER LEGGERE DA IMMAGINE NIR
         if( uv_pt(0) > 0 && uv_pt(0) < CalibData.img_width && uv_pt(1) > 0 && uv_pt(1) < CalibData.img_height ){
             int ExG = computeExGforXYZRGBPoint(pt);
             output_img.at<cv::Vec3b>( uv_pt(1), uv_pt(0) )[0] = 0;
@@ -114,14 +116,15 @@ int main(int argc, char **argv) {
             Eigen::Vector3d cam_pt_nir = CalibData.cam_R * Eigen::Vector3d(pt.x, pt.y, pt.z) - CalibData.cam_R * CalibData.cam_t;
             // cam_pt_nir = pix4dReader.nirParams_.K*pix4dReader.gre_nir_extrn_.R_*pix4dReader.gre_rgb_extrn_.R_.transpose()*pix4dReader.nirParams_.K.inverse()*cam_pt_nir + 
             // pix4dReader.nirParams_.K * ( - pix4dReader.gre_nir_extrn_.R_*pix4dReader.gre_rgb_extrn_.t_ + pix4dReader.gre_nir_extrn_.t_ );
-            cam_pt_nir = pix4dReader.gre_nir_extrn_.R_*pix4dReader.gre_rgb_extrn_.R_.transpose()*cam_pt_nir + ( - pix4dReader.gre_nir_extrn_.R_*pix4dReader.gre_rgb_extrn_.t_ + pix4dReader.gre_nir_extrn_.t_ );
-            Eigen::Vector2d uv_pt_nir;
+            cam_pt_nir = pix4dReader.gre_nir_extrn_.R_*pix4dReader.gre_rgb_extrn_.R_*cam_pt_nir + ( pix4dReader.gre_nir_extrn_.R_*pix4dReader.gre_rgb_extrn_.t_ + pix4dReader.gre_nir_extrn_.t_ );
+            Eigen::Vector2d uv_pt_nir;//(cam_pt_nir(0)/cam_pt_nir(2), cam_pt_nir(1)/cam_pt_nir(2));
             uv_pt_nir(0) = pix4dReader.nirParams_.K(0,0) * ( cam_pt_nir(0)/cam_pt_nir(2) ) + pix4dReader.nirParams_.K(0,2);
             uv_pt_nir(1) = pix4dReader.nirParams_.K(1,1) * ( cam_pt_nir(1)/cam_pt_nir(2) ) + pix4dReader.nirParams_.K(1,2);
+            //back_project(pix4dReader.nirParams_, uv_pt_nir);
 
             int color = 0;
             if( uv_pt_nir(0) > 0 && uv_pt_nir(0) < pix4dReader.nirParams_.img_width && uv_pt_nir(1) > 0 && uv_pt_nir(1) < pix4dReader.nirParams_.img_height )
-                 color = nir_img_und.at<uchar>( uv_pt_nir(1), uv_pt_nir(0) );
+                 color = nir_img.at<uchar>( uv_pt_nir(1), uv_pt_nir(0) );
 
             output_img_nir.at<uchar>( uv_pt(1), uv_pt(0) ) = color;
         }
@@ -247,21 +250,21 @@ int main(int argc, char **argv) {
 template<typename T>
 void back_project(T params, Eigen::Vector2d& uv){
 
-    // float r_sq = uv(0)*uv(0) + uv(1)*uv(1);
+    float r_sq = uv(0)*uv(0) + uv(1)*uv(1);
 
-    // Eigen::Vector2d uv_ud;
+    Eigen::Vector2d uv_ud;
 
-    // uv_ud(0) = (1 + params.r_dist_coeffs(0) * r_sq + params.r_dist_coeffs(1) * r_sq * r_sq + params.r_dist_coeffs(2) * r_sq * r_sq * r_sq) * uv(0) +
-    //            2 * params.t_dist_coeffs(0) * uv(0) * uv(1) + params.t_dist_coeffs(1) * ( r_sq + 2 * uv(0) * uv(0) );
+    uv_ud(0) = (1 + params.r_dist_coeffs(0) * r_sq + params.r_dist_coeffs(1) * r_sq * r_sq + params.r_dist_coeffs(2) * r_sq * r_sq * r_sq) * uv(0) +
+               2 * params.t_dist_coeffs(0) * uv(0) * uv(1) + params.t_dist_coeffs(1) * ( r_sq + 2 * uv(0) * uv(0) );
 
-    // uv_ud(1) = (1 + params.r_dist_coeffs(0) * r_sq + params.r_dist_coeffs(1) * r_sq * r_sq + params.r_dist_coeffs(2) * r_sq * r_sq * r_sq) * uv(1) +
-    //            2 * params.t_dist_coeffs(1) * uv(0) * uv(1) + params.t_dist_coeffs(0) * ( r_sq + 2 * uv(1) * uv(1) );
+    uv_ud(1) = (1 + params.r_dist_coeffs(0) * r_sq + params.r_dist_coeffs(1) * r_sq * r_sq + params.r_dist_coeffs(2) * r_sq * r_sq * r_sq) * uv(1) +
+               2 * params.t_dist_coeffs(1) * uv(0) * uv(1) + params.t_dist_coeffs(0) * ( r_sq + 2 * uv(1) * uv(1) );
 
-    // uv(0) = - uv_ud(0) * params.K(0,0) + params.K(0,2);
-    // uv(1) = - uv_ud(1) * params.K(1,1) + params.K(1,2); 
+    uv(0) = uv_ud(0) * params.K(0,0) + params.K(0,2);
+    uv(1) = uv_ud(1) * params.K(1,1) + params.K(1,2); 
 
-    uv(0) = - uv(0) * params.K(0,0) + params.K(0,2);
-    uv(1) = - uv(1) * params.K(1,1) + params.K(1,2); 
+    // uv(0) = - uv(0) * params.K(0,0) + params.K(0,2);
+    // uv(1) = - uv(1) * params.K(1,1) + params.K(1,2); 
 
     // uv(0) = uv(0) * 3659.61 + 2310.04;
     // uv(1) = - uv(1) * 3659.61 + 1706.11;
