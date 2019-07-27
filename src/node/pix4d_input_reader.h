@@ -60,6 +60,23 @@ struct CalibCamParams{
     }
 };
 
+struct MspCalibCamParams{
+
+    char img[50];
+    int img_width, img_height;
+    Eigen::Vector3d cam_t;
+    Eigen::Matrix3d cam_R;
+
+    MspCalibCamParams() : cam_t(Eigen::Vector3d::Zero()), cam_R(Eigen::Matrix3d::Identity()) {};
+    
+    void print(){
+        cout.precision(10);
+        cout << "Image size: " << img_width << " " << img_height << "\n\n";
+        cout << "Camera Position:\n" << cam_t.transpose() << "\n\n";
+        cout << "Camera Rotation Matrix:\n" << cam_R << "\n\n";
+    }
+};
+
 
 class pix4dInputReader{
 
@@ -116,5 +133,7 @@ class pix4dInputReader{
         ifstream* instream_;
         string curr_line_;
         list<string> imgs_;
+
+        // MSP PARAMS
 
 };
