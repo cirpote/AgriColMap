@@ -84,6 +84,7 @@ class pix4dInputReader{
         pix4dInputReader(string& input_file);
         ~pix4dInputReader();
         void readParamFile();
+        void readMSPFile();
         void printParams(int& id);
         void printParams(string& key);
         void printMultiSpectralParams();
@@ -114,8 +115,13 @@ class pix4dInputReader{
         unordered_map<string, CalibCamParams> pix4dCalibData_;
         Eigen::Vector3d offset;
 
+        // MSP PARAMS
+        unordered_map<string, MspCalibCamParams> NIR_params_, GRE_params_, RED_params_, REG_params_;
+        list<string> NIR_strs_, GRE_strs_, RED_strs_, REG_strs_;
+
     private:
         bool getImgsAndSize(CalibCamParams& params, const char* str);
+        bool getImgsSizePose(MspCalibCamParams& params);
 
         void getSize(MultiSpectralCalibParams& params);
         void getStereoCalibParams(StereoCalibCamParams& params);
@@ -133,7 +139,5 @@ class pix4dInputReader{
         ifstream* instream_;
         string curr_line_;
         list<string> imgs_;
-
-        // MSP PARAMS
 
 };

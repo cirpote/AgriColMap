@@ -42,6 +42,80 @@ void pix4dInputReader::readParamFile(){
     instream_->close();
 }
 
+bool pix4dInputReader::getImgsSizePose(MspCalibCamParams& params){
+
+    vector<string> line_chunks; 
+    split(curr_line_, line_chunks, ' ');
+
+    string& str = line_chunks[0];
+    int str_size = str.size();
+    
+    str.copy( params.img, str_size, 0);
+
+    strstream_->str(line_chunks[1]);
+    *strstream_ >> params.img_width;
+    strstream_->clear();
+
+    strstream_->str(line_chunks[2]);
+    *strstream_ >> params.img_height;
+    strstream_->clear(); 
+
+    getline(*instream_, curr_line_);
+    strstream_->str(curr_line_);
+    *strstream_ >> params.cam_t(0);
+    *strstream_ >> params.cam_t(1);
+    *strstream_ >> params.cam_t(2);
+    strstream_->clear();
+
+    getline(*instream_, curr_line_);
+    strstream_->str(curr_line_);
+    *strstream_ >> params.cam_R(0,0);
+    *strstream_ >> params.cam_R(0,1);
+    *strstream_ >> params.cam_R(0,2);
+    strstream_->clear();
+
+    getline(*instream_, curr_line_);
+    strstream_->str(curr_line_);
+    *strstream_ >> params.cam_R(1,0);
+    *strstream_ >> params.cam_R(1,1);
+    *strstream_ >> params.cam_R(1,2);
+    strstream_->clear();
+
+    getline(*instream_, curr_line_);
+    strstream_->str(curr_line_);
+    *strstream_ >> params.cam_R(2,0);
+    *strstream_ >> params.cam_R(2,1);
+    *strstream_ >> params.cam_R(2,2);
+    strstream_->clear();
+}
+
+void pix4dInputReader::readMSPFile(){
+
+    while ( getline( *instream_, curr_line_)){
+        MspCalibCamParams params;
+        if( curr_line_.find("GRE") != string::npos ){
+            getImgsSizePose(params);
+            GRE_strs_.push_back(params.img);
+            GRE_params_.insert( pair<string, MspCalibCamParams>(params.img, params) );
+        } else if(curr_line_.find("NIR") != string::npos ){
+            getImgsSizePose(params);
+            NIR_strs_.push_back(params.img);
+            NIR_params_.insert( pair<string, MspCalibCamParams>(params.img, params) );
+        } else if(curr_line_.find("RED") != string::npos ){
+            getImgsSizePose(params);
+            RED_strs_.push_back(params.img);
+            RED_params_.insert( pair<string, MspCalibCamParams>(params.img, params) );
+        } else if(curr_line_.find("REG") != string::npos ){
+            getImgsSizePose(params);
+            REG_strs_.push_back(params.img);
+            REG_params_.insert( pair<string, MspCalibCamParams>(params.img, params) );
+        }
+
+        //params.print();
+    }
+    instream_->close();
+}
+
 void pix4dInputReader::printParams(int& id){
     
     int index = 0;
