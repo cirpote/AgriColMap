@@ -48,6 +48,18 @@ int main(int argc, char **argv) {
     pix4dInputReader pix4dReader( extrnscs_calibcamparams_str, instrnscs_calibcamparams_str, cam_id_map_str );
     pix4dReader.readMSPFile();
 
+    pix4dReader.printCameraID("0");
+    pix4dReader.printCameraID("1");
+    pix4dReader.printCameraID("2");
+    pix4dReader.printCameraID("3");
+
+    pix4dReader.printCameraIntrinsic("GRE");
+    pix4dReader.printCameraIntrinsic("RED");
+    pix4dReader.printCameraIntrinsic("REG");
+    pix4dReader.printCameraIntrinsic("NIR");
+
+    pix4dReader.printCameraExtrinsic("NIR", 0);
+
     // string input_pcl_str_xyz = _package_path + "/src/node/8may_jesi_nir/2_densification/point_cloud/8may_jesi_nir_NIR_densified_point_cloud.ply";
     // //PCLPointCloudXYZRGB::Ptr _pcl_data( new PCLPointCloudXYZRGB() );
     // //pcl::io::loadPLYFile<PCLptXYZRGB> ( input_pcl_str_xyz, *_pcl_data);

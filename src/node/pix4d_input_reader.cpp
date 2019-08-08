@@ -10,9 +10,9 @@ pix4dInputReader::pix4dInputReader(string& extrnscs_file_path,
                                    intrnscs_params_file_path_(intrnscs_file_path),
                                    cam_id_map_file_path_(cam_id_file_path) {
 
-    std::cout << FBLU("\nextrnscs_params_file_path_: " ) << extrnscs_params_file_path_ <<"\n\n";
-    std::cout << FBLU("intrnscs_params_file_path_: " ) << intrnscs_params_file_path_ <<"\n\n";
-    std::cout << FBLU("cam_id_map_file_path_: " ) << cam_id_map_file_path_ <<"\n\n";
+    std::cout << FBLU("\nextrnscs_params_file_path_: " ) << extrnscs_params_file_path_ <<"\n";
+    std::cout << FBLU("intrnscs_params_file_path_: " ) << intrnscs_params_file_path_ <<"\n";
+    std::cout << FBLU("cam_id_map_file_path_: " ) << cam_id_map_file_path_ <<"\n";
 
 
     if( !boost::filesystem::exists(extrnscs_params_file_path_) || 
@@ -27,19 +27,17 @@ pix4dInputReader::~pix4dInputReader() {}
 
 bool pix4dInputReader::getImgsSizePose(MspCalibCamParams& params){
 
-    vector<string> line_chunks; 
     split(curr_line_, line_chunks, ' ');
 
     string& str = line_chunks[0];
     int str_size = str.size();
-    
     str.copy( params.img, str_size, 0);
 
     ifstreamToScalar(1, params.img_width);
     ifstreamToScalar(2, params.img_height);
 
     getline(*instream_, curr_line_);
-    ifstreamToVector( params.cam_t );
+    ifstreamToVector( params.cam_t.transpose() );
 
     getline(*instream_, curr_line_);
     ifstreamToVector( params.cam_R.row(0) );
@@ -53,15 +51,15 @@ bool pix4dInputReader::getImgsSizePose(MspCalibCamParams& params){
 
 void pix4dInputReader::readMSPFile(){
 
-    std::cout << FBLU("Reading Camera-ID Params File ...\n");
+    std::cout << FBLU("Reading Camera-ID Params File ") << cam_id_map_file_path_ << "\n";
     readCamIdParams();
-    std::cout << FBLU("Reading Camera-ID Params Done \n\n");
-    std::cout << FBLU("Reading Instrisic Params File ...\n");
+    std::cout << FBLU("Reading Camera-ID Params Done! \n\n");
+    std::cout << FBLU("Reading Instrisic Params File ") << intrnscs_params_file_path_ << "\n";
     readInstrinsicParams();
-    std::cout << FBLU("Reading Instrisic Params Done \n\n");
-    std::cout << FBLU("Reading Extrinsic Params File ...\n");
+    std::cout << FBLU("Reading Instrisic Params Done! \n\n");
+    std::cout << FBLU("Reading Extrinsic Params File ") << extrnscs_params_file_path_ << "\n";
     readExtrinsicParams();
-    std::cout << FBLU("Reading Extrinsic Params Done \n");
+    std::cout << FBLU("Reading Extrinsic Params Done! \n\n");
 }
 
 void pix4dInputReader::readCamIdParams(){
@@ -146,6 +144,47 @@ void pix4dInputReader::readExtrinsicParams(){
 
     }
     instream_->close();
+}
+
+void pix4dInputReader::printCameraIntrinsic(string&& idx_str){
+
+    std::cout << FGRN( "Intrinsic params for " ) << idx_str << FGRN(" camera:\n");
+    intrinsics_calib_params_.at(idx_str).print();
+
+}
+
+void pix4dInputReader::printCameraExtrinsic(string&& idx_str, int&& i){
+
+    if( i > NIR_params_.size() )
+        FRED("Param index out of bounds!");
+
+    std::cout << FGRN( "Extrinsic params for " ) << idx_str << FGRN(" camera:\n");
+    if( !strcmp( idx_str.c_str(), "NIR" ) ){ 
+        list<string>::iterator it = NIR_strs_.begin();
+        advance(it, i);
+        std::cout << "Image name: " << *it << "\n\n";
+        NIR_params_.at( *it ).print();
+    } else if( !strcmp( idx_str.c_str(), "RED" ) ){ 
+        list<string>::iterator it = RED_strs_.begin();
+        advance(it, i);
+        std::cout << "Image name: " << *it << "\n\n";
+        RED_params_.at( *it ).print();
+    } else if( !strcmp( idx_str.c_str(), "REG" ) ){
+        list<string>::iterator it = REG_strs_.begin();
+        advance(it, i); 
+        std::cout << "Image name: " << *it << "\n\n";
+        REG_params_.at( *it ).print();
+    } else if( !strcmp( idx_str.c_str(), "GRE" ) ){ 
+        list<string>::iterator it = GRE_strs_.begin();
+        advance(it, i);
+        std::cout << "Image name: " << *it << "\n\n";
+        GRE_params_.at( *it ).print();
+    }    
+}
+
+void pix4dInputReader::printCameraID(string&& idx_str){
+
+    std::cout << FGRN( "Camera for ID " ) << idx_str << FGRN( " ====> " ) << cam_id_map_.at(idx_str) << "\n\n";
 }
 
 template<typename T>

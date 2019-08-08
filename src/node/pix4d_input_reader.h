@@ -46,6 +46,10 @@ class pix4dInputReader{
         ~pix4dInputReader();
         void readMSPFile();
 
+        void printCameraIntrinsic(string&&);
+        void printCameraExtrinsic(string&&, int&&);
+        void printCameraID(string&&);
+
     private:
         void readCamIdParams();
         void readInstrinsicParams();
