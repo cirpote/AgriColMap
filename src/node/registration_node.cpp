@@ -14,37 +14,39 @@ void back_project(T params, Eigen::Vector2d& uv);
 
 int main(int argc, char **argv) {
 
-    string input_pcl_str_xyz = _package_path + "/src/node/msp_cloud.ply";
-    pcl::PointCloud<pcl::PointXYZRGBA>::Ptr _pcl_data_MSP( new pcl::PointCloud<pcl::PointXYZRGBA>() );
-    pcl::io::loadPLYFile<pcl::PointXYZRGBA> ( input_pcl_str_xyz, *_pcl_data_MSP);
+    // string input_pcl_str_xyz = _package_path + "/src/node/msp_cloud.ply";
+    // pcl::PointCloud<pcl::PointXYZRGBA>::Ptr _pcl_data_MSP( new pcl::PointCloud<pcl::PointXYZRGBA>() );
+    // pcl::io::loadPLYFile<pcl::PointXYZRGBA> ( input_pcl_str_xyz, *_pcl_data_MSP);
 
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr _pcl_viz( new pcl::PointCloud<pcl::PointXYZRGB>( _pcl_data_MSP->size(), 1 ) ); 
+    // pcl::PointCloud<pcl::PointXYZRGB>::Ptr _pcl_viz( new pcl::PointCloud<pcl::PointXYZRGB>( _pcl_data_MSP->size(), 1 ) ); 
 
-    pcl::PointCloud<pcl::PointXYZRGB>::iterator it_cloud = _pcl_viz->begin();
-    for( pcl::PointXYZRGBA& pt : *_pcl_data_MSP){
-        it_cloud->x = pt.x;
-        it_cloud->y = pt.y;
-        it_cloud->z = pt.z;
-        it_cloud->b = pt.a;
-        it_cloud->g = pt.a;
-        it_cloud->r = pt.a;
-        it_cloud++;
-    }
+    // pcl::PointCloud<pcl::PointXYZRGB>::iterator it_cloud = _pcl_viz->begin();
+    // for( pcl::PointXYZRGBA& pt : *_pcl_data_MSP){
+    //     it_cloud->x = pt.x;
+    //     it_cloud->y = pt.y;
+    //     it_cloud->z = pt.z;
+    //     it_cloud->b = pt.a;
+    //     it_cloud->g = pt.a;
+    //     it_cloud->r = pt.a;
+    //     it_cloud++;
+    // }
 
-    PointCloudViz viz;
-    viz.setViewerBackground(255,255,255);
-    viz.showCloud( _pcl_viz, "row_cloud" );
-    viz.setViewerPosition(0,0,80,-1,0,0);
-    viz.spingUntilDeath();
+    // PointCloudViz viz;
+    // viz.setViewerBackground(255,255,255);
+    // viz.showCloud( _pcl_viz, "row_cloud" );
+    // viz.setViewerPosition(0,0,80,-1,0,0);
+    // viz.spingUntilDeath();
 
     // Eigen::Matrix3d R_rgb_nir( Eigen::AngleAxisd(-0.02, Eigen::Vector3d::UnitZ()) *   // -0.02
     //                            Eigen::AngleAxisd(0.0, Eigen::Vector3d::UnitY()) *  // -0.015
     //                            Eigen::AngleAxisd(0.0f, Eigen::Vector3d::UnitX()) );
     // Eigen::Vector3d t_rgb_nir( -1.0e-02, -7.5e-03, 8.0e-03 );
 
-    // string input_calibcanparams_str = _package_path + "/src/node/8may_jesi_nir/1_initial/params/8may_jesi_nir_calibrated_camera_parameters.txt";
-    // pix4dInputReader pix4dReader(input_calibcanparams_str);
-    // pix4dReader.readMSPFile();
+    string extrnscs_calibcamparams_str = _package_path + "/src/node/8may_jesi_nir/1_initial/params/8may_jesi_nir_calibrated_camera_parameters.txt";
+    string cam_id_map_str = _package_path + "/src/node/8may_jesi_nir/1_initial/params/8may_jesi_nir_calibrated_rig_parameters.txt";
+    string instrnscs_calibcamparams_str = _package_path + "/src/node/8may_jesi_nir/1_initial/params/8may_jesi_nir_pix4d_calibrated_internal_camera_parameters.cam";
+    pix4dInputReader pix4dReader( extrnscs_calibcamparams_str, instrnscs_calibcamparams_str, cam_id_map_str );
+    pix4dReader.readMSPFile();
 
     // string input_pcl_str_xyz = _package_path + "/src/node/8may_jesi_nir/2_densification/point_cloud/8may_jesi_nir_NIR_densified_point_cloud.ply";
     // //PCLPointCloudXYZRGB::Ptr _pcl_data( new PCLPointCloudXYZRGB() );
