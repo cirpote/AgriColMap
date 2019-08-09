@@ -1,4 +1,4 @@
-add_executable(registration_node registration_node.cpp pix4d_input_reader.cpp)
+add_executable(registration_node registration_node.cpp pix4d_input_reader.cpp file_reader.cpp)
 target_link_libraries(registration_node pointcloud_aligner_lib yaml-cpp visualizer_lib)
 
 # add_executable(visualization_node_soybean visualization_node_soybean.cpp )

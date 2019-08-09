@@ -62,6 +62,48 @@
 #define BOLD(x)	"\x1B[1m" x RST
 #define UNDL(x)	"\x1B[4m" x RST
 
+
+
+struct MspIntrnscsParams{
+
+    float px, py;
+    float Aff;
+    float p1, p2;
+
+    MspIntrnscsParams() : px(0.f), py(0.f), Aff(0.f), p1(0.f), p2(0.f) {};
+    
+    void print(){
+        cout.precision(10);
+        cout << "Principal Point: " << px << " " << py << "\n\n";
+        cout << "Affine Value: " << Aff<< "\n\n";
+        cout << "Polynomial Coeffs:\n" << p1 << " " << p2 << "\n\n";
+    }
+};
+
+struct MspCalibCamParams{
+
+    char img[50];
+    int img_width, img_height;
+    Eigen::Vector3d cam_t;
+    Eigen::Matrix3d cam_R;
+
+    MspCalibCamParams() : cam_t(Eigen::Vector3d::Zero()), cam_R(Eigen::Matrix3d::Identity()) {};
+    
+    void print(){
+        cout.precision(10);
+        cout << "Image size: " << img_width << " " << img_height << "\n\n";
+        cout << "Camera Position:\n" << cam_t.transpose() << "\n\n";
+        cout << "Camera Rotation Matrix:\n" << cam_R << "\n\n";
+    }
+};
+
+
+
+
+
+
+// OLD STUFF
+
 // Eigen typedefs
 typedef Eigen::Matrix3f Matrix3;
 typedef Eigen::Vector3f Vector3;
@@ -71,6 +113,23 @@ typedef Eigen::Vector2f Vector2;
 typedef Eigen::Vector2d Vector2d;
 typedef Eigen::Quaternionf Quat;
 typedef Eigen::Isometry3f Transform;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 enum MatchingType {
     SURF,

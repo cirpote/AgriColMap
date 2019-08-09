@@ -58,6 +58,9 @@ int main(int argc, char **argv) {
     pix4dReader.printCameraIntrinsic("REG");
     pix4dReader.printCameraIntrinsic("NIR");
 
+    pix4dReader.printCameraExtrinsic("GRE", 0);
+    pix4dReader.printCameraExtrinsic("RED", 0);
+    pix4dReader.printCameraExtrinsic("REG", 0);
     pix4dReader.printCameraExtrinsic("NIR", 0);
 
     // string input_pcl_str_xyz = _package_path + "/src/node/8may_jesi_nir/2_densification/point_cloud/8may_jesi_nir_NIR_densified_point_cloud.ply";
