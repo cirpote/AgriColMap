@@ -14,7 +14,7 @@ class pix4dInputReader{
         void printCameraExtrinsic(string&&, int&&);
         void printCameraID(string&&);
 
-    private:
+    //private:
 
         // MSP Parameters
         // unordered_map<string, MspCalibCamParams> NIR_params_, GRE_params_, RED_params_, REG_params_;

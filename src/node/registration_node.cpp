@@ -25,9 +25,10 @@ int main(int argc, char **argv) {
     //     it_cloud->x = pt.x;
     //     it_cloud->y = pt.y;
     //     it_cloud->z = pt.z;
-    //     it_cloud->b = pt.a;
-    //     it_cloud->g = pt.a;
-    //     it_cloud->r = pt.a;
+    //     it_cloud->b = pt.r;
+    //     it_cloud->g = pt.r;
+    //     it_cloud->r = pt.r;
+    //     it_cloud->a = 1.f;
     //     it_cloud++;
     // }
 
@@ -41,6 +42,10 @@ int main(int argc, char **argv) {
     //                            Eigen::AngleAxisd(0.0, Eigen::Vector3d::UnitY()) *  // -0.015
     //                            Eigen::AngleAxisd(0.0f, Eigen::Vector3d::UnitX()) );
     // Eigen::Vector3d t_rgb_nir( -1.0e-02, -7.5e-03, 8.0e-03 );
+
+
+
+
 
     string extrnscs_calibcamparams_str = _package_path + "/src/node/8may_jesi_nir/1_initial/params/8may_jesi_nir_calibrated_camera_parameters.txt";
     string cam_id_map_str = _package_path + "/src/node/8may_jesi_nir/1_initial/params/8may_jesi_nir_calibrated_rig_parameters.txt";
@@ -63,168 +68,175 @@ int main(int argc, char **argv) {
     pix4dReader.printCameraExtrinsic("REG", 0);
     pix4dReader.printCameraExtrinsic("NIR", 0);
 
-    // string input_pcl_str_xyz = _package_path + "/src/node/8may_jesi_nir/2_densification/point_cloud/8may_jesi_nir_NIR_densified_point_cloud.ply";
+    string input_pcl_str_xyz = _package_path + "/src/node/8may_jesi_nir/2_densification/point_cloud/8may_jesi_nir_NIR_densified_point_cloud.ply";
     // //PCLPointCloudXYZRGB::Ptr _pcl_data( new PCLPointCloudXYZRGB() );
     // //pcl::io::loadPLYFile<PCLptXYZRGB> ( input_pcl_str_xyz, *_pcl_data);
 
-    // PCLPointCloudXYZRGB::Ptr _pcl_data_RED( new PCLPointCloudXYZRGB() );
-    // pcl::io::loadPLYFile<PCLptXYZRGB> ( input_pcl_str_xyz, *_pcl_data_RED);
-    // pcl::PointCloud<pcl::PointXYZRGBA>::Ptr output_cloud( new pcl::PointCloud<pcl::PointXYZRGBA>( _pcl_data_RED->size(), 1));
+    PCLPointCloudXYZRGB::Ptr _pcl_data_RED( new PCLPointCloudXYZRGB() );
+    pcl::io::loadPLYFile<PCLptXYZRGB> ( input_pcl_str_xyz, *_pcl_data_RED);
+    pcl::PointCloud<pcl::PointXYZRGBA>::Ptr output_cloud( new pcl::PointCloud<pcl::PointXYZRGBA>( _pcl_data_RED->size(), 1));
     // //pcl::PointCloud<pcl::PointXYZRGB>::Ptr output_cloud( new pcl::PointCloud<pcl::PointXYZRGB>( _pcl_data_RED->size(), 1));
 
-    // std::vector<cv::Mat> RED_imgs_( pix4dReader.RED_strs_.size(), cv::Mat( cv::Size(1280, 960), CV_16UC1, cv::Scalar(0) ) );
-    // std::vector<cv::Mat> NIR_imgs_( pix4dReader.NIR_strs_.size(), cv::Mat( cv::Size(1280, 960), CV_16UC1, cv::Scalar(0) ) );
-    // std::vector<cv::Mat> REG_imgs_( pix4dReader.REG_strs_.size(), cv::Mat( cv::Size(1280, 960), CV_16UC1, cv::Scalar(0) ) );
-    // std::vector<cv::Mat> GRE_imgs_( pix4dReader.GRE_strs_.size(), cv::Mat( cv::Size(1280, 960), CV_16UC1, cv::Scalar(0) ) );
+
+    int num_imgs = pix4dReader.MSP_params_.count("NIR");
+    typedef std::multimap<string,MspCalibCamParams>::iterator MspCalibCamParamsIterator;
+    std::pair<MspCalibCamParamsIterator, MspCalibCamParamsIterator> range_nir = pix4dReader.MSP_params_.equal_range("NIR");
+    std::pair<MspCalibCamParamsIterator, MspCalibCamParamsIterator> range_red = pix4dReader.MSP_params_.equal_range("RED");
+    std::pair<MspCalibCamParamsIterator, MspCalibCamParamsIterator> range_gre = pix4dReader.MSP_params_.equal_range("GRE");
+    std::pair<MspCalibCamParamsIterator, MspCalibCamParamsIterator> range_reg = pix4dReader.MSP_params_.equal_range("REG");
+
+    MspCalibCamParamsIterator it_nir = range_nir.first;
+    MspCalibCamParamsIterator it_red = range_red.first;
+    MspCalibCamParamsIterator it_gre = range_gre.first;
+    MspCalibCamParamsIterator it_reg = range_reg.first;
+
+
+    cv::Size imgs_size(it_nir->second.img_width, it_nir->second.img_height);
+    std::vector<cv::Mat> RED_imgs_( num_imgs, cv::Mat(imgs_size, CV_16UC1, cv::Scalar(0) ) );
+    std::vector<cv::Mat> NIR_imgs_( num_imgs, cv::Mat(imgs_size, CV_16UC1, cv::Scalar(0) ) );
+    std::vector<cv::Mat> REG_imgs_( num_imgs, cv::Mat(imgs_size, CV_16UC1, cv::Scalar(0) ) );
+    std::vector<cv::Mat> GRE_imgs_( num_imgs, cv::Mat(imgs_size, CV_16UC1, cv::Scalar(0) ) );
 
     // std::vector<cv::Mat> RGB_imgs_( pix4dReader.RED_strs_.size(), cv::Mat( cv::Size(4608, 3456), CV_8UC3, cv::Scalar(0, 0, 0) ) );
 
-    // std::vector<MspCalibCamParams> RED_parms( pix4dReader.RED_strs_.size(), MspCalibCamParams());
-    // std::vector<MspCalibCamParams> NIR_parms( pix4dReader.NIR_strs_.size(), MspCalibCamParams());
-    // std::vector<MspCalibCamParams> REG_parms( pix4dReader.REG_strs_.size(), MspCalibCamParams());
-    // std::vector<MspCalibCamParams> GRE_parms( pix4dReader.GRE_strs_.size(), MspCalibCamParams());
+    std::vector<MspCalibCamParams> RED_parms;
+    std::vector<MspCalibCamParams> NIR_parms;
+    std::vector<MspCalibCamParams> REG_parms;
+    std::vector<MspCalibCamParams> GRE_parms;
 
-    // std::cout << pix4dReader.RED_strs_.size() << " " << RED_imgs_.size() << " " << RED_parms.size() << "\n";
-
-    // int index = 0;
-    // list< string >::iterator it = pix4dReader.RED_strs_.begin();
-    // list< string >::iterator it_nir = pix4dReader.NIR_strs_.begin();
-    // list< string >::iterator it_gre = pix4dReader.GRE_strs_.begin();
-    // list< string >::iterator it_reg = pix4dReader.REG_strs_.begin();
-    // for ( ; it != pix4dReader.RED_strs_.end(); ++it, ++index, ++it_nir, ++it_gre, ++it_reg ){
+    int index = 0;
+    for ( ; it_nir != range_nir.second; it_nir++, it_reg++, it_gre++, it_red++, index++ ){
         
-    //     std::string curr_img = *it;
-    //     int str_to_replace_pos = curr_img.find("TIF", 0);
-    //     curr_img.replace(str_to_replace_pos, 3, "jpg");
-    //     RED_imgs_.at(index) = cv::imread(_package_path + "/src/node/8may_jesi_nir/1_initial/project_data/normalised/" + curr_img, CV_LOAD_IMAGE_UNCHANGED);
+        std::string curr_img = it_nir->second.img;
+        int str_to_replace_pos = curr_img.find("TIF", 0);
+        curr_img.replace(str_to_replace_pos, 3, "jpg");
+        NIR_imgs_.at(index) = cv::imread(_package_path + "/src/node/8may_jesi_nir/1_initial/project_data/normalised/" + curr_img, CV_LOAD_IMAGE_UNCHANGED);
         
-    //     curr_img = *it_nir;
-    //     str_to_replace_pos = curr_img.find("TIF", 0);
-    //     curr_img.replace(str_to_replace_pos, 3, "jpg");
-    //     NIR_imgs_.at(index) = cv::imread(_package_path + "/src/node/8may_jesi_nir/1_initial/project_data/normalised/" + curr_img, CV_LOAD_IMAGE_UNCHANGED);
+        curr_img = it_red->second.img;
+        str_to_replace_pos = curr_img.find("TIF", 0);
+        curr_img.replace(str_to_replace_pos, 3, "jpg");
+        RED_imgs_.at(index) = cv::imread(_package_path + "/src/node/8may_jesi_nir/1_initial/project_data/normalised/" + curr_img, CV_LOAD_IMAGE_UNCHANGED);
+
+        curr_img = it_gre->second.img;
+        str_to_replace_pos = curr_img.find("TIF", 0);
+        curr_img.replace(str_to_replace_pos, 3, "jpg");
+        GRE_imgs_.at(index) = cv::imread(_package_path + "/src/node/8may_jesi_nir/1_initial/project_data/normalised/" + curr_img, CV_LOAD_IMAGE_UNCHANGED);
+
+        curr_img = it_reg->second.img;
+        str_to_replace_pos = curr_img.find("TIF", 0);
+        curr_img.replace(str_to_replace_pos, 3, "jpg");
+        REG_imgs_.at(index) = cv::imread(_package_path + "/src/node/8may_jesi_nir/1_initial/project_data/normalised/" + curr_img, CV_LOAD_IMAGE_UNCHANGED);
+
+        RED_parms.push_back(it_red->second);
+        NIR_parms.push_back(it_nir->second);
+        REG_parms.push_back(it_reg->second);
+        GRE_parms.push_back(it_gre->second);
         
-    //     curr_img = *it_reg;
-    //     str_to_replace_pos = curr_img.find("TIF", 0);
-    //     curr_img.replace(str_to_replace_pos, 3, "jpg");
-    //     REG_imgs_.at(index) = cv::imread(_package_path + "/src/node/8may_jesi_nir/1_initial/project_data/normalised/" + curr_img, CV_LOAD_IMAGE_UNCHANGED);
-        
-    //     curr_img = *it_gre;
-    //     str_to_replace_pos = curr_img.find("TIF", 0);
-    //     curr_img.replace(str_to_replace_pos, 3, "jpg");
-    //     GRE_imgs_.at(index) = cv::imread(_package_path + "/src/node/8may_jesi_nir/1_initial/project_data/normalised/" + curr_img, CV_LOAD_IMAGE_UNCHANGED);
-
-
-    //     // str_to_replace_pos = curr_img.find("NIR.jpg", 0);
-    //     // curr_img.replace(str_to_replace_pos, 7, "RGB.JPG");
-    //     // RGB_imgs_.at(index) = cv::imread(_package_path + "/src/node/08may2019_jesi_bis/undistorted_images/" + curr_img, CV_LOAD_IMAGE_UNCHANGED);
-        
-    //     RED_parms.at(index) = pix4dReader.RED_params_.at( *it );
-    //     NIR_parms.at(index) = pix4dReader.NIR_params_.at( *it_nir );
-    //     REG_parms.at(index) = pix4dReader.REG_params_.at( *it_reg );
-    //     GRE_parms.at(index) = pix4dReader.GRE_params_.at( *it_gre );
-        
-    //     // std::cout << curr_img << " " << GRE_imgs_.at(index).type() << "\n"; 
-    //     // cv::imshow("ciao", GRE_imgs_.at(index));
-    //     // cv::waitKey(10);
-    // }
+        std::cout << curr_img << " " << GRE_imgs_.at(index).type() << "\n"; 
+        cv::imshow("gre", GRE_imgs_.at(index));
+        cv::imshow("red", RED_imgs_.at(index));
+        cv::imshow("reg", REG_imgs_.at(index));
+        cv::imshow("nir", NIR_imgs_.at(index));
+        cv::waitKey(0);
+    }
 
 
 
-    // pcl::PointCloud<pcl::PointXYZRGBA>::iterator it_cloud = output_cloud->begin();
-    // for( PCLptXYZRGB& pt : *_pcl_data_RED){
+    pcl::PointCloud<pcl::PointXYZRGBA>::iterator it_cloud = output_cloud->begin();
+    for( PCLptXYZRGB& pt : *_pcl_data_RED){
 
-    //     it_cloud->x = pt.x;
-    //     it_cloud->y = pt.y;
-    //     it_cloud->z = pt.z;
+        it_cloud->x = pt.x;
+        it_cloud->y = pt.y;
+        it_cloud->z = pt.z;
 
-    //     int min_red = 1000, min_reg = 1000, min_gre = 1000, min_nir = 1000;
+        int min_red = 1000, min_reg = 1000, min_gre = 1000, min_nir = 1000;
 
-    //     for(unsigned int iter = 0; iter < RED_parms.size(); ++iter){ 
+        for(unsigned int iter = 0; iter < RED_parms.size(); ++iter){ 
 
-    //         // RED
-    //         Eigen::Vector3d cam_pt_red =  RED_parms.at(iter).cam_R * ( Eigen::Vector3d(pt.x, pt.y, pt.z) - RED_parms.at(iter).cam_t); 
+            // RED
+            Eigen::Vector3d cam_pt_red =  RED_parms.at(iter).cam_R * ( Eigen::Vector3d(pt.x, pt.y, pt.z) - RED_parms.at(iter).cam_t); 
 
-    //         float dist_red = sqrt( cam_pt_red(0)*cam_pt_red(0) + cam_pt_red(1)*cam_pt_red(1) );
-    //         float theta = 2/M_PI * atan2(dist_red, cam_pt_red(2));
-    //         float p = theta + 0.006852437*theta*theta - 0.15810*theta*theta*theta;
+            float dist_red = sqrt( cam_pt_red(0)*cam_pt_red(0) + cam_pt_red(1)*cam_pt_red(1) );
+            float theta = 2/M_PI * atan2(dist_red, cam_pt_red(2));
+            float p = theta + 0.006852437*theta*theta - 0.15810*theta*theta*theta;
 
-    //         Eigen::Vector2d xh_red( ( p*cam_pt_red(0) )/dist_red, ( p*cam_pt_red(1) )/dist_red);
-    //         Eigen::Vector2d uv_pt_red;
-    //         uv_pt_red(0) = 1674.2487 * xh_red(0) + 663.5946;
-    //         uv_pt_red(1) = 1674.2487 * xh_red(1) + 486.5140;
+            Eigen::Vector2d xh_red( ( p*cam_pt_red(0) )/dist_red, ( p*cam_pt_red(1) )/dist_red);
+            Eigen::Vector2d uv_pt_red;
+            uv_pt_red(0) = 1674.2487 * xh_red(0) + 663.5946;
+            uv_pt_red(1) = 1674.2487 * xh_red(1) + 486.5140;
 
-    //         if( uv_pt_red(0) > 0 && uv_pt_red(0) < 1280 && uv_pt_red(1) > 0 && uv_pt_red(1) < 960 ){
-    //             if( (uint8_t)RED_imgs_.at(iter).at<uchar>( uv_pt_red(1), uv_pt_red(0) ) < min_red )
-    //                 min_red = (uint8_t)RED_imgs_.at(iter).at<uchar>( uv_pt_red(1), uv_pt_red(0) );
+            if( uv_pt_red(0) > 0 && uv_pt_red(0) < 1280 && uv_pt_red(1) > 0 && uv_pt_red(1) < 960 ){
+                if( (uint8_t)RED_imgs_.at(iter).at<uchar>( uv_pt_red(1), uv_pt_red(0) ) < min_red )
+                    min_red = (uint8_t)RED_imgs_.at(iter).at<uchar>( uv_pt_red(1), uv_pt_red(0) );
 
-    //         }
+            }
 
-    //         // NIR
-    //         Eigen::Vector3d cam_pt_nir =  NIR_parms.at(iter).cam_R * ( Eigen::Vector3d(pt.x, pt.y, pt.z) - NIR_parms.at(iter).cam_t); 
+            // NIR
+            Eigen::Vector3d cam_pt_nir =  NIR_parms.at(iter).cam_R * ( Eigen::Vector3d(pt.x, pt.y, pt.z) - NIR_parms.at(iter).cam_t); 
 
-    //         float dist_nir = sqrt( cam_pt_nir(0)*cam_pt_nir(0) + cam_pt_nir(1)*cam_pt_nir(1) );
-    //         float theta_nir = 2/M_PI * atan2(dist_nir, cam_pt_nir(2));
-    //         float p_nir = theta_nir + 0.009845531*theta_nir*theta_nir - 0.1620564*theta_nir*theta_nir*theta_nir;
+            float dist_nir = sqrt( cam_pt_nir(0)*cam_pt_nir(0) + cam_pt_nir(1)*cam_pt_nir(1) );
+            float theta_nir = 2/M_PI * atan2(dist_nir, cam_pt_nir(2));
+            float p_nir = theta_nir + 0.009845531*theta_nir*theta_nir - 0.1620564*theta_nir*theta_nir*theta_nir;
 
-    //         Eigen::Vector2d xh_nir( ( p_nir*cam_pt_nir(0) )/dist_nir, ( p*cam_pt_nir(1) )/dist_nir);
-    //         Eigen::Vector2d uv_pt_nir;
-    //         uv_pt_nir(0) = 1675.65935 * xh_nir(0) + 668.33149;
-    //         uv_pt_nir(1) = 1675.65935 * xh_nir(1) + 502.16601;
+            Eigen::Vector2d xh_nir( ( p_nir*cam_pt_nir(0) )/dist_nir, ( p*cam_pt_nir(1) )/dist_nir);
+            Eigen::Vector2d uv_pt_nir;
+            uv_pt_nir(0) = 1675.65935 * xh_nir(0) + 668.33149;
+            uv_pt_nir(1) = 1675.65935 * xh_nir(1) + 502.16601;
 
-    //         if( uv_pt_nir(0) > 0 && uv_pt_nir(0) < 1280 && uv_pt_nir(1) > 0 && uv_pt_nir(1) < 960 ){
-    //             if( (uint8_t)NIR_imgs_.at(iter).at<uchar>( uv_pt_nir(1), uv_pt_nir(0) ) < min_nir )
-    //                 min_nir = (uint8_t)NIR_imgs_.at(iter).at<uchar>( uv_pt_nir(1), uv_pt_nir(0) );
+            if( uv_pt_nir(0) > 0 && uv_pt_nir(0) < 1280 && uv_pt_nir(1) > 0 && uv_pt_nir(1) < 960 ){
+                if( (uint8_t)NIR_imgs_.at(iter).at<uchar>( uv_pt_nir(1), uv_pt_nir(0) ) < min_nir )
+                    min_nir = (uint8_t)NIR_imgs_.at(iter).at<uchar>( uv_pt_nir(1), uv_pt_nir(0) );
 
-    //         }
+            }
 
-    //         // GRE
-    //         Eigen::Vector3d cam_pt_gre =  GRE_parms.at(iter).cam_R * ( Eigen::Vector3d(pt.x, pt.y, pt.z) - GRE_parms.at(iter).cam_t); 
+            // GRE
+            Eigen::Vector3d cam_pt_gre =  GRE_parms.at(iter).cam_R * ( Eigen::Vector3d(pt.x, pt.y, pt.z) - GRE_parms.at(iter).cam_t); 
 
-    //         float dist_gre = sqrt( cam_pt_gre(0)*cam_pt_gre(0) + cam_pt_gre(1)*cam_pt_gre(1) );
-    //         float theta_gre = 2/M_PI * atan2(dist_gre, cam_pt_gre(2));
-    //         float p_gre = theta_gre + 0.00802037*theta_gre*theta_gre - 0.1608063*theta_gre*theta_gre*theta_gre;
+            float dist_gre = sqrt( cam_pt_gre(0)*cam_pt_gre(0) + cam_pt_gre(1)*cam_pt_gre(1) );
+            float theta_gre = 2/M_PI * atan2(dist_gre, cam_pt_gre(2));
+            float p_gre = theta_gre + 0.00802037*theta_gre*theta_gre - 0.1608063*theta_gre*theta_gre*theta_gre;
 
-    //         Eigen::Vector2d xh_gre( ( p_gre*cam_pt_gre(0) )/dist_gre, ( p_gre*cam_pt_gre(1) )/dist_gre);
-    //         Eigen::Vector2d uv_pt_gre;
-    //         uv_pt_gre(0) = 1667.51496 * xh_gre(0) + 666.812349;
-    //         uv_pt_gre(1) = 1667.51496 * xh_gre(1) + 501.219773;
+            Eigen::Vector2d xh_gre( ( p_gre*cam_pt_gre(0) )/dist_gre, ( p_gre*cam_pt_gre(1) )/dist_gre);
+            Eigen::Vector2d uv_pt_gre;
+            uv_pt_gre(0) = 1667.51496 * xh_gre(0) + 666.812349;
+            uv_pt_gre(1) = 1667.51496 * xh_gre(1) + 501.219773;
 
-    //         if( uv_pt_gre(0) > 0 && uv_pt_gre(0) < 1280 && uv_pt_gre(1) > 0 && uv_pt_gre(1) < 960 ){
-    //             if( (uint8_t)GRE_imgs_.at(iter).at<uchar>( uv_pt_gre(1), uv_pt_gre(0) ) < min_gre )
-    //                 min_gre = (uint8_t)GRE_imgs_.at(iter).at<uchar>( uv_pt_gre(1), uv_pt_gre(0) );
+            if( uv_pt_gre(0) > 0 && uv_pt_gre(0) < 1280 && uv_pt_gre(1) > 0 && uv_pt_gre(1) < 960 ){
+                if( (uint8_t)GRE_imgs_.at(iter).at<uchar>( uv_pt_gre(1), uv_pt_gre(0) ) < min_gre )
+                    min_gre = (uint8_t)GRE_imgs_.at(iter).at<uchar>( uv_pt_gre(1), uv_pt_gre(0) );
 
-    //         }
+            }
 
-    //         // REG
-    //         Eigen::Vector3d cam_pt_reg =  REG_parms.at(iter).cam_R * ( Eigen::Vector3d(pt.x, pt.y, pt.z) - REG_parms.at(iter).cam_t); 
+            // REG
+            Eigen::Vector3d cam_pt_reg =  REG_parms.at(iter).cam_R * ( Eigen::Vector3d(pt.x, pt.y, pt.z) - REG_parms.at(iter).cam_t); 
 
-    //         float dist_reg = sqrt( cam_pt_reg(0)*cam_pt_reg(0) + cam_pt_reg(1)*cam_pt_reg(1) );
-    //         float theta_reg = 2/M_PI * atan2(dist_reg, cam_pt_reg(2));
-    //         float p_reg = theta_reg + 0.00439209*theta_reg*theta_reg - 0.153902*theta_reg*theta_reg*theta_reg;
+            float dist_reg = sqrt( cam_pt_reg(0)*cam_pt_reg(0) + cam_pt_reg(1)*cam_pt_reg(1) );
+            float theta_reg = 2/M_PI * atan2(dist_reg, cam_pt_reg(2));
+            float p_reg = theta_reg + 0.00439209*theta_reg*theta_reg - 0.153902*theta_reg*theta_reg*theta_reg;
 
-    //         Eigen::Vector2d xh_reg( ( p_gre*cam_pt_reg(0) )/dist_reg, ( p_gre*cam_pt_reg(1) )/dist_reg);
-    //         Eigen::Vector2d uv_pt_reg;
-    //         uv_pt_reg(0) = 1684.53929 * xh_reg(0) + 655.9213;
-    //         uv_pt_reg(1) = 1684.53929 * xh_reg(1) + 497.6731;
+            Eigen::Vector2d xh_reg( ( p_gre*cam_pt_reg(0) )/dist_reg, ( p_gre*cam_pt_reg(1) )/dist_reg);
+            Eigen::Vector2d uv_pt_reg;
+            uv_pt_reg(0) = 1684.53929 * xh_reg(0) + 655.9213;
+            uv_pt_reg(1) = 1684.53929 * xh_reg(1) + 497.6731;
 
-    //         if( uv_pt_reg(0) > 0 && uv_pt_reg(0) < 1280 && uv_pt_reg(1) > 0 && uv_pt_reg(1) < 960 ){
-    //             if( (uint8_t)REG_imgs_.at(iter).at<uchar>( uv_pt_reg(1), uv_pt_reg(0) ) < min_reg )
-    //                 min_reg = (uint8_t)REG_imgs_.at(iter).at<uchar>( uv_pt_reg(1), uv_pt_reg(0) );
+            if( uv_pt_reg(0) > 0 && uv_pt_reg(0) < 1280 && uv_pt_reg(1) > 0 && uv_pt_reg(1) < 960 ){
+                if( (uint8_t)REG_imgs_.at(iter).at<uchar>( uv_pt_reg(1), uv_pt_reg(0) ) < min_reg )
+                    min_reg = (uint8_t)REG_imgs_.at(iter).at<uchar>( uv_pt_reg(1), uv_pt_reg(0) );
 
-    //         }
+            }
 
-    //     }
+        }
 
 
-    //     it_cloud->b = min_nir;
-    //     it_cloud->g = min_gre;
-    //     it_cloud->r = min_red;
-    //     it_cloud->a = min_reg;
-    //     it_cloud++;
+        it_cloud->b = min_nir;
+        it_cloud->g = min_gre;
+        it_cloud->r = min_red;
+        it_cloud->a = min_reg;
+        it_cloud++;
 
-    // }
+    }
 
-    // pcl::io::savePLYFileASCII (_package_path + "/src/node/" + "msp_cloud.ply", *output_cloud);
+    pcl::io::savePLYFileASCII (_package_path + "/src/node/" + "msp_cloud.ply", *output_cloud);
 
 
 
@@ -233,6 +245,9 @@ int main(int argc, char **argv) {
     // viz.showCloud( output_cloud, "row_cloud" );
     // viz.setViewerPosition(0,0,80,-1,0,0);
     // viz.spingUntilDeath();
+
+
+
 
 
 
